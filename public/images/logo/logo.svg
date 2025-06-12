@@ -1,0 +1,15 @@
+<svg width="250" height="40" viewBox="0 0 320 50" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .company {
+      font: bold 40px sans-serif;
+      fill: #3E5CFA;
+    }
+    .slang {
+      font: 20px sans-serif;
+      fill: #3E5CFA;
+    }
+  </style>
+
+  <text x="0" y="35" class="company">FinQuantum Inc.</text>
+  <!-- <text x="0" y="55" class="slang">Income Aggregation Simplified</text> -->
+</svg>
