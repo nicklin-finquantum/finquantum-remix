@@ -1,18 +1,19 @@
-import React, { useEffect } from "react";
-import {
-  TextField,
-  Box,
-  Tooltip,
-  IconButton,
-  Autocomplete,
-  Typography,
-  Button,
-} from "@mui/material";
-import InfoIcon from "@mui/icons-material/Info";
-import { Product } from "../../types/product";
-import ApplicantForm from "./ApplicantForm";
-import useApplicationForm from "../../hooks/useApplicationForm";
-import { APPLICATION_FORM } from "../../types/application";
+import { Info } from 'lucide-react';
+import React, { useEffect } from 'react';
+
+import { Alert, AlertDescription } from '~/components/ui/alert';
+import { Button } from '~/components/ui/button';
+import { Card, CardContent } from '~/components/ui/card';
+import { Input } from '~/components/ui/input';
+import { Label } from '~/components/ui/label';
+import useApplicationForm from '~/hooks/useApplicationForm';
+import type { APPLICATION_FORM } from '~/types/application';
+import type { Product } from '~/types/product';
+
+import ApplicantForm from './ApplicantForm';
+
+import { Combobox } from '~/components/ui/combobox';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '~/components/ui/tooltip';
 
 const ApplicationInfoForm: React.FC<{ edit?: boolean; product: Product }> = ({
   product,
@@ -41,87 +42,61 @@ const ApplicationInfoForm: React.FC<{ edit?: boolean; product: Product }> = ({
   }, [edit]);
 
   return (
-    <Box>
-      {Modal}
-      <Box className="p-7">
+    <Card className="w-full">
+      <CardContent className="p-6">
+        {Modal}
         <form onSubmit={handleSubmit}>
-          <Box className="mb-5.5 flex flex-col gap-1 sm:flex-row items-start sm:w-1/2">
+          <div className="mb-6 flex flex-col gap-1 sm:flex-row items-start sm:w-1/2">
             {edit ? (
-              <Box className="searchbar-0 w-full flex">
-                <Box
-                  className="flex min-w-17 input-label-secondary bg-blue-400 items-center p-2 h-[41px]"
-                  sx={{
-                    borderRadius: "4px 4px 4px 4px",
-                  }}
-                >
-                  <Typography variant="body1" className="text-white">
-                    Search
-                  </Typography>
-                </Box>
-                <Autocomplete
-                  disablePortal
-                  options={applicationList}
-                  onChange={(event: any, newValue: APPLICATION_FORM | null) => {
-                    setApplicationInfo(newValue);
-                  }}
+              <div className="w-full">
+                <div className="flex min-w-17 bg-blue-400 items-center p-2 h-[41px] rounded-tl-md rounded-bl-md">
+                  <span className="text-white">Search</span>
+                </div>
+                <Combobox
+                  items={applicationList}
                   value={applicationInfo}
-                  getOptionLabel={(option) => option.userApplicationId || ""} // Specify how to display the label
-                  renderInput={(params) => (
-                    <Box className="w-full flex align-top">
-                      <TextField
-                        {...params}
-                        fullWidth
-                        error={
-                          applicationValidationStatus.userApplicationIdStatus ===
-                          "error"
-                        }
-                        helperText={
-                          applicationValidationMessage[
-                            "userApplicationIdMessage"
-                          ]
-                        }
-                        placeholder="Enter File Number (example: 12334456)"
-                      />
-                    </Box>
-                  )}
-                  fullWidth
-                  isOptionEqualToValue={(option, value) =>
-                    option.userApplicationId === value.userApplicationId
-                  }
-                  noOptionsText={"No file found"}
+                  onChange={(value: APPLICATION_FORM | null) => setApplicationInfo(value)}
+                  getOptionLabel={(option) => option.userApplicationId || ''}
+                  placeholder="Enter File Number (example: 12334456)"
+                  error={applicationValidationStatus.userApplicationIdStatus === 'error'}
+                  errorMessage={applicationValidationMessage['userApplicationIdMessage']}
                 />
-              </Box>
+              </div>
             ) : (
-              <Box className="w-full align-top">
-                <Box className="input-label">
-                  File Number
-                  <Tooltip
-                    className="h-fit"
-                    title="This is the same number as that x digit file number (ie. 12334456) you use in your own system. Please enter the exact number here so our systems match up the files."
-                  >
-                    <IconButton>
-                      <InfoIcon />
-                    </IconButton>
-                  </Tooltip>
-                </Box>
-                <TextField
+              <div className="w-full">
+                <div className="flex items-center gap-2 mb-2">
+                  <Label htmlFor="userApplicationId">File Number</Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Info className="h-4 w-4 text-gray-500" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>This is the same number as that x digit file number (ie. 12334456) you use in your own system. Please enter the exact number here so our systems match up the files.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <Input
+                  id="userApplicationId"
                   name="userApplicationId"
                   value={applicationInfo?.userApplicationId}
-                  error={
-                    applicationValidationStatus.userApplicationIdStatus ===
-                    "error"
-                  }
-                  helperText={
-                    applicationValidationMessage["userApplicationIdMessage"]
-                  }
-                  onChange={(e) => handleChange(e, "File Number")}
-                  onBlur={(e) => handleChange(e, "File Number")}
-                  fullWidth
+                  onChange={(e) => handleChange(e, 'File Number')}
+                  onBlur={(e) => handleChange(e, 'File Number')}
                   placeholder="Enter File Number (example: 12334456)"
+                  className={applicationValidationStatus.userApplicationIdStatus === 'error' ? 'border-red-500' : ''}
                 />
-              </Box>
+                {applicationValidationStatus.userApplicationIdStatus === 'error' && (
+                  <Alert variant="destructive" className="mt-2">
+                    <AlertDescription>
+                      {applicationValidationMessage['userApplicationIdMessage']}
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </div>
             )}
-          </Box>
+          </div>
+
           {applicantList.map(
             (applicant, index) =>
               applicant && (
@@ -130,12 +105,8 @@ const ApplicationInfoForm: React.FC<{ edit?: boolean; product: Product }> = ({
                   applicant={applicant}
                   index={index}
                   product={product}
-                  validationStatus={
-                    applicationValidationStatus?.applicantStatus[index]
-                  }
-                  validationMessage={
-                    applicationValidationMessage?.applicantMessage[index]
-                  }
+                  validationStatus={applicationValidationStatus?.applicantStatus[index]}
+                  validationMessage={applicationValidationMessage?.applicantMessage[index]}
                   onApplicantChange={handleApplicantChange}
                   handleRemoveApplicant={handleRemoveApplicant}
                   setFileList={setFileList}
@@ -143,35 +114,31 @@ const ApplicationInfoForm: React.FC<{ edit?: boolean; product: Product }> = ({
                 />
               ),
           )}
+
           {(!edit || (edit && applicationInfo?.userApplicationId)) && (
-            <Box>
-              <Box className="gap-4.5 mt-4">
+            <div className="mt-6 space-y-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={addApplicant}
+                disabled={applicantList.length >= 5}
+              >
+                Add More Applicants
+              </Button>
+              <div className="flex justify-end">
                 <Button
-                  type="button"
-                  variant="outlined"
-                  color="secondary"
-                  onClick={addApplicant}
-                  disabled={applicantList.length >= 5}
-                >
-                  Add More Applicants
-                </Button>
-              </Box>
-              <Box className="flex justify-end">
-                <Button
-                  className="submit-btn"
-                  type="button"
-                  variant="contained"
-                  color="primary"
+                  type="submit"
+                  variant="default"
                   onClick={handleSubmit}
                 >
                   Save
                 </Button>
-              </Box>
-            </Box>
+              </div>
+            </div>
           )}
         </form>
-      </Box>
-    </Box>
+      </CardContent>
+    </Card>
   );
 };
 

@@ -1,14 +1,14 @@
-import React from "react";
-import SsoImg from "../../images/sso/SsoImg.svg";
-import { Box } from "@mui/material";
+import React from 'react';
+
+import SsoImg from '~/public/images/sso/SsoImg.svg';
 
 const About: React.FC = () => {
   return (
-    <Box className="hidden xl:block px-20">
+    <div className="hidden px-20 xl:block">
       <span className="mt-30 inline-block">
-        <img src={SsoImg} alt="SsoImg" />
+        <img src={SsoImg} alt="SSO Authentication" className="w-full h-auto" />
       </span>
-    </Box>
+    </div>
   );
 };
 

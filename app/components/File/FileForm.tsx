@@ -1,21 +1,24 @@
-import React, { useEffect, useState, useRef } from "react";
-import { Product } from "../../types/product";
-import { XMarkIcon } from "@heroicons/react/24/outline";
-import { DUP_FILE, FILE_INPUT } from "../../types/file";
-import { DriveFolderUpload } from "@mui/icons-material";
-import { Box } from "@mui/material";
-import useModal from "../../hooks/useModal";
+import { X } from 'lucide-react';
+import React, { useEffect, useState, useRef } from 'react';
+
+import { Button } from '~/components/ui/button';
+import { Label } from '~/components/ui/label';
+import useModal from '~/hooks/useModal';
+import type { DUP_FILE, FILE_INPUT } from '~/types/file';
+import { Product } from '~/types/product';
 
 // Enum with camelCase keys, display names as values, and accepted file types
 const FileNameMap = {
-  bankStatements: { name: "Bank Statements", accept: ["application/pdf"] },
-  taxReturns: { name: "Tax Returns", accept: ["application/pdf"] },
+  bankStatements: { name: 'Bank Statements', accept: ['application/pdf'] },
+  taxReturns: { name: 'Tax Returns', accept: ['application/pdf'] },
   creditReports: {
-    name: "Credit Report (CreditKarma report document only): ",
-    accept: ["application/pdf"],
+    name: 'Credit Report (CreditKarma report document only): ',
+    accept: ['application/pdf'],
   },
-  paystubs: { name: "Paystubs", accept: ["application/pdf"] },
-};
+  paystubs: { name: 'Paystubs', accept: ['application/pdf'] },
+} as const;
+
+type FileType = keyof typeof FileNameMap;
 
 const FileForm: React.FC<{
   product: Product;
@@ -43,7 +46,7 @@ const FileForm: React.FC<{
       const file = dupInputList[0];
       if (file.inDb) {
         setMessage(
-          `${file["name"]} is already uploaded, please delete it first.`,
+          `${file.name} is already uploaded, please delete it first.`,
         );
         setOkFunction(
           () => () => handleRemoveInput(file.type, file.idx - dupIdx),
@@ -53,7 +56,7 @@ const FileForm: React.FC<{
         return;
       } else {
         setMessage(
-          `${file["name"]} is selected already.\nDo you want to replace it?`,
+          `${file.name} is selected already.\nDo you want to replace it?`,
         );
         setOkFunction(() => () => handleRemoveInput(file.type, file.prevIdx));
         setCancelFunction(
@@ -66,11 +69,11 @@ const FileForm: React.FC<{
     setDupIdx(0);
   }, [dupInputList]);
 
-  let fileTypeList: Array<string> = [];
+  let fileTypeList: FileType[] = [];
   if (product === Product.INCOME_ANALYSIS) {
-    fileTypeList = ["bankStatements", "taxReturns", "paystubs"];
+    fileTypeList = ['bankStatements', 'taxReturns', 'paystubs'];
   } else if (product === Product.MORTGAGE_ANALYSIS) {
-    fileTypeList = ["creditReports"];
+    fileTypeList = ['creditReports'];
   }
 
   const handleRemoveInput = (key: string, idx: number) => {
@@ -96,7 +99,9 @@ const FileForm: React.FC<{
         };
         newFileInputs[key] = [...newFileInputs[key]];
         newFileInputs[key].splice(index, 1);
-        appendDeleteFileId(fileToRemove.id);
+        if (fileToRemove.id) {
+          appendDeleteFileId(fileToRemove.id);
+        }
         setFileInputs(newFileInputs);
         closeModal();
       });
@@ -117,7 +122,13 @@ const FileForm: React.FC<{
     const files = Array.from(e.target.files || []);
     const prevLen = fileInputs[key]?.length;
 
-    const inputDupList = [];
+    const inputDupList: Array<{
+      name: string;
+      inDb: boolean | undefined;
+      type: string;
+      prevIdx: number;
+      idx: number;
+    }> = [];
     files.forEach((file, i) => {
       fileInputs[key]?.forEach((input, idx) => {
         if (input.name === file.name) {
@@ -132,61 +143,70 @@ const FileForm: React.FC<{
       });
     });
 
-    setDupInputList(inputDupList);
+    setDupInputList(inputDupList as DUP_FILE[]);
     const newFileInputs: { [key: string]: FILE_INPUT[] } = { ...fileInputs };
     newFileInputs[key] = [...(newFileInputs[key] ?? []), ...files];
     setFileInputs(newFileInputs);
-    e.target.value = ""; // Reset the input value to allow the same file to be uploaded again if needed
+    e.target.value = ''; // Reset the input value to allow the same file to be uploaded again if needed
   };
 
   const renderFileList = (files: File[], fileType: string) => (
-    <ul>
+    <ul className="mt-2 space-y-2">
       {files.map((file, index) => (
-        <Box key={index} className="flex">
-          <li>{file.name}</li>
-          <XMarkIcon
-            className="icon hover:cursor-pointer"
+        <li key={index} className="flex items-center justify-between rounded-md border p-2">
+          <span className="text-sm truncate">{file.name}</span>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
             onClick={() => handleRemoveFile(index, fileType)}
-          />
-        </Box>
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </li>
       ))}
     </ul>
   );
 
-  const handleButtonClick = (fileType: string) => {
+  const handleButtonClick = (fileType: FileType) => {
     if (fileInputRef.current) {
-      fileInputRef.current.accept = FileNameMap[fileType].accept.join(",");
+      fileInputRef.current.accept = FileNameMap[fileType].accept.join(',');
       fileInputRef.current.click();
     }
   };
 
   return (
-    <Box>
+    <div className="space-y-6">
       {Modal}
       {fileTypeList.map((key) => (
-        <Box key={key}>
-          <label className="block font-bold">
-            {FileNameMap[key].name}
-            <DriveFolderUpload
+        <div key={key} className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-base font-semibold">
+              {FileNameMap[key].name}
+            </Label>
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => handleButtonClick(key)}
-              fontSize="inherit"
-              className="cursor-pointer !text-black !text-2xl	!w-8 !h-8"
-            />
-          </label>
+              className="gap-2"
+            >
+              <span>Upload</span>
+            </Button>
+          </div>
           <input
             type="file"
             multiple
             ref={fileInputRef}
-            className="file-upload-btn hidden"
+            className="hidden"
             onChange={(e) => handleFileChange(e, key)}
           />
           {fileInputs[key] && fileInputs[key].length > 0 && (
-            <Box>Uploaded Document List:</Box>
+            <div className="text-sm text-muted-foreground">Uploaded Documents:</div>
           )}
           {renderFileList(fileInputs[key] ?? [], key)}
-        </Box>
+        </div>
       ))}
-    </Box>
+    </div>
   );
 };
 

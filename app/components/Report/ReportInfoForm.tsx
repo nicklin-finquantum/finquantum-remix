@@ -1,44 +1,47 @@
-import React, { useEffect, useState } from "react";
-import { StatusType } from "../../types/statusType";
-import { getProductUrl, sendRequest } from "../../utils/utils";
-import {
-  APPLICANT_LIST_BY_APPLICATION_API,
-  APPLICATION_LIST_API,
-  DOWNLOAD_REPORT_PATH,
-  REPORT_CREATE_API,
-} from "../../utils/consts";
-import { REPORT_FORM } from "../../types/report";
-import { Product } from "../../types/product";
-import { APPLICANT, APPLICANT_FORM } from "../../types/applicant";
+import type {
+  SelectChangeEvent } from '@mui/material';
 import {
   Autocomplete,
   Box,
   FormControl,
   MenuItem,
   Select,
-  SelectChangeEvent,
   TextField,
   FormGroup,
   FormControlLabel,
   Checkbox,
   Button,
-} from "@mui/material";
-import { APPLICATION } from "../../types/application";
-import useModal from "../../hooks/useModal";
-import { Link, useSearchParams } from "react-router-dom";
-import ErrorMessage from "../ErrorMessage/ErrorMessage";
+} from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+
+import useModal from '~/hooks/useModal';
+import type { APPLICANT, APPLICANT_FORM } from '~/types/applicant';
+import type { APPLICATION } from '~/types/application';
+import type { Product } from '~/types/product';
+import type { REPORT_FORM } from '~/types/report';
+import type { StatusType } from '~/types/statusType';
+import {
+  APPLICANT_LIST_BY_APPLICATION_API,
+  APPLICATION_LIST_API,
+  DOWNLOAD_REPORT_PATH,
+  REPORT_CREATE_API,
+} from '~/utils/consts';
+import { getProductUrl, sendRequest } from '~/utils/utils';
+
+import ErrorMessage from '~/ErrorMessage/ErrorMessage';
 
 const defaultvalidationStatus: {
   selectedApplicationStatus: StatusType;
   applicantListStatus: StatusType;
 } = {
-  selectedApplicationStatus: "default",
-  applicantListStatus: "default",
+  selectedApplicationStatus: 'default',
+  applicantListStatus: 'default',
 };
 
 const defaultValidationMessage = {
-  selectedApplicationMessage: "",
-  applicantListMessage: "",
+  selectedApplicationMessage: '',
+  applicantListMessage: '',
 };
 
 const ReportInfoForm: React.FC<{
@@ -51,11 +54,11 @@ const ReportInfoForm: React.FC<{
   const [checkboxList, setCheckboxList] = useState<APPLICANT[]>([]);
 
   const [reportInfo, setReportInfo] = useState<REPORT_FORM>({
-    reportType: "Credit",
+    reportType: 'Credit',
   });
 
   const [searchParams] = useSearchParams();
-  const applicationId = searchParams.get("applicationId");
+  const applicationId = searchParams.get('applicationId');
 
   const {
     Modal,
@@ -74,7 +77,7 @@ const ReportInfoForm: React.FC<{
     const getApplicationList = async () => {
       const response = await sendRequest(
         APPLICATION_LIST_API,
-        "GET",
+        'GET',
         {
           product: product,
         },
@@ -108,7 +111,7 @@ const ReportInfoForm: React.FC<{
     const getDataList = async () => {
       const response = await sendRequest(
         APPLICANT_LIST_BY_APPLICATION_API,
-        "GET",
+        'GET',
         { product: product, applicationId: selectedApplication?.id },
         true,
       );
@@ -143,10 +146,10 @@ const ReportInfoForm: React.FC<{
     value: string | number,
   ) => {
     switch (name) {
-      case "userReportId":
-        return value ? "" : `${label} is required`;
+      case 'userReportId':
+        return value ? '' : `${label} is required`;
       default:
-        return "";
+        return '';
     }
   };
 
@@ -157,7 +160,7 @@ const ReportInfoForm: React.FC<{
     const { checked } = e.target;
     setValidationMessage((prev) => ({
       ...prev,
-      applicantListMessage: "",
+      applicantListMessage: '',
     }));
     setCheckboxList((prev) =>
       prev.map((item) =>
@@ -182,9 +185,9 @@ const ReportInfoForm: React.FC<{
 
   const handleChange = (e: SelectChangeEvent<string>, label: string) => {
     const { name, value } = e.target;
-    let newValue: string | number = value;
+    const newValue: string | number = value;
     const errorMessage = validateInput(name, label, newValue);
-    const status = errorMessage ? "error" : "default";
+    const status = errorMessage ? 'error' : 'default';
 
     setReportInfo((prev) => ({ ...prev, [name]: newValue }));
     setValidationStatus((prev) => ({ ...prev, [`${name}Status`]: status }));
@@ -200,11 +203,11 @@ const ReportInfoForm: React.FC<{
     if (!selectedApplication) {
       setValidationStatus((prev) => ({
         ...prev,
-        selectedApplicationStatus: "error",
+        selectedApplicationStatus: 'error',
       }));
       setValidationMessage((prev) => ({
         ...prev,
-        selectedApplicationMessage: "Please select a file number",
+        selectedApplicationMessage: 'Please select a file number',
       }));
       return;
     }
@@ -216,7 +219,7 @@ const ReportInfoForm: React.FC<{
     if (!applicantIds.length) {
       setValidationMessage((prev) => ({
         ...prev,
-        applicantListMessage: "An applicant must be selected.",
+        applicantListMessage: 'An applicant must be selected.',
       }));
       return;
     }
@@ -224,7 +227,7 @@ const ReportInfoForm: React.FC<{
     try {
       const response = await sendRequest(
         REPORT_CREATE_API,
-        "POST",
+        'POST',
         {
           ...reportInfo,
           applicantIds: applicantIds,
@@ -251,7 +254,7 @@ const ReportInfoForm: React.FC<{
           <Box className="font-bold report-generation-fail">
             Report generation failed.
           </Box>
-          <Box>{error instanceof Error ? error.message : "Internal Error"}</Box>
+          <Box>{error instanceof Error ? error.message : 'Internal Error'}</Box>
         </Box>,
       );
       setOkFunction(handleOk);
@@ -269,7 +272,7 @@ const ReportInfoForm: React.FC<{
           <Box className="info-card mb-5">
             Before you start, make sure you've already created a file with
             applicant info as well as uploaded the CreditKarma document per
-            these{" "}
+            these{' '}
             <Link
               className="underline"
               to="https://docs.google.com/document/d/1VqmWPB-I1zn4DhDfK0nEIyErJjo7aH0cAucMCLYzOuw/edit"
@@ -290,11 +293,11 @@ const ReportInfoForm: React.FC<{
                   setSelectedApplication(newValue);
                   setValidationStatus((prev) => ({
                     ...prev,
-                    selectedApplicationStatus: "default",
+                    selectedApplicationStatus: 'default',
                   }));
                   setValidationMessage((prev) => ({
                     ...prev,
-                    selectedApplicationMessage: "",
+                    selectedApplicationMessage: '',
                   }));
                 }}
                 value={selectedApplication}
@@ -304,7 +307,7 @@ const ReportInfoForm: React.FC<{
                       {...params}
                       fullWidth
                       error={
-                        validationStatus.selectedApplicationStatus === "error"
+                        validationStatus.selectedApplicationStatus === 'error'
                       }
                       helperText={validationMessage.selectedApplicationMessage}
                       placeholder="Search File Number (example: 12334456)"

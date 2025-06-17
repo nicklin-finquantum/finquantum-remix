@@ -1,65 +1,95 @@
-import React, { useState, useEffect } from "react";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { Box } from "@mui/material";
+import React, { useState } from 'react';
 
-import { checkOrgRole, fetchDataList } from "../../utils/utils";
 import {
-  APPLICATION_LIST_API,
-  USER_APPLICATION_LIST_API,
-} from "../../utils/consts";
-import { Product } from "../../types/product";
-import { useUser } from "../../hooks/useUser";
-import OrgRole from "../../types/orgRole";
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '~/components/ui/pagination';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '~/components/ui/table';
+import type { APPLICATION } from '~/types/application';
 
-const ApplicationHomeTable: React.FC = () => {
-  const [rows, setRows] = useState([]);
-  const { user } = useUser();
-  const isOrgAdmin = checkOrgRole(user);
-  const orgId = user?.organization?.id;
-  const userId = user?.id;
+const ApplicationHomeTable: React.FC<{ applicationList?: APPLICATION[] }> = ({ applicationList }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 25;
 
-  useEffect(() => {
-    const getDataList = async () => {
-      try {
-        const data = await fetchDataList(
-          user.organization.role === OrgRole.ADMIN
-            ? APPLICATION_LIST_API
-            : USER_APPLICATION_LIST_API,
-          {
-            product: Product.MORTGAGE_ANALYSIS,
-            userId: userId ?? user.id,
-            ...(isOrgAdmin && { orgId }),
-          },
-        );
-        setRows(data.applicationList);
-        //console.log("data.applicationList", data.applicationList);
-      } catch (error) {
-        console.error("Failed to fetch application home list:", error);
-      }
-    };
-    getDataList();
-  }, []);
-
-  const columns: GridColDef[] = [
-    //{ field: "owner", headerName: "Owner", flex: 1 },
-    { field: "userApplicationId", headerName: "File No.", flex: 1 },
-    { field: "status", headerName: "Status", flex: 2 },
-  ];
+  // Calculate pagination
+  const totalPages = Math.ceil(applicationList?.length ?? 0 / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentRows = applicationList?.slice(startIndex, endIndex) ?? [];
 
   return (
-    <Box className="datagrid-container">
-      <DataGrid
-        scrollbarSize={4}
-        rows={rows}
-        initialState={{
-          pagination: {
-            paginationModel: { pageSize: 25, page: 0 },
-          },
-        }}
-        columns={columns}
-        localeText={{ noRowsLabel: "No file found" }}
-      />
-    </Box>
+    <div className="w-full">
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[200px]">File No.</TableHead>
+              <TableHead>Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {currentRows.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={2} className="text-center">
+                  No file found
+                </TableCell>
+              </TableRow>
+            ) : (
+              currentRows.map((row, index) => (
+                <TableRow key={index}>
+                  <TableCell>{row.userApplicationId}</TableCell>
+                  <TableCell>{row.status}</TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {totalPages > 1 && (
+        <div className="mt-4">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
+                />
+              </PaginationItem>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <PaginationItem key={page}>
+                  <PaginationLink
+                    onClick={() => setCurrentPage(page)}
+                    isActive={currentPage === page}
+                  >
+                    {page}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  className={currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
+    </div>
   );
 };
 

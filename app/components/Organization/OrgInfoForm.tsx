@@ -1,16 +1,17 @@
-import React, { useState } from "react";
-import { BuildingOffice2Icon } from "@heroicons/react/24/outline";
-import { StatusType } from "../../types/statusType";
-import { ORG_CREATE_API } from "../../utils/consts";
-import { sendRequest } from "../../utils/utils";
-import useModal from "../../hooks/useModal";
-import { useUser } from "../../hooks/useUser";
-import { Box, TextField, Button, InputAdornment } from "@mui/material";
+import { BuildingOffice2Icon } from '@heroicons/react/24/outline';
+import { Box, TextField, Button, InputAdornment } from '@mui/material';
+import React, { useState } from 'react';
+
+import useModal from '~/hooks/useModal';
+import { useUser } from '~/hooks/useUser';
+import type { StatusType } from '~/types/statusType';
+import { ORG_CREATE_API } from '~/utils/consts';
+import { sendRequest } from '~/utils/utils';
 
 const OrgInfoForm: React.FC<{ edit?: boolean }> = ({ edit = false }) => {
-  const [name, setName] = useState("");
-  const [nameStatus, setNameStatus] = useState<StatusType>("default");
-  const [nameMessage, setNameMessage] = useState("");
+  const [name, setName] = useState('');
+  const [nameStatus, setNameStatus] = useState<StatusType>('default');
+  const [nameMessage, setNameMessage] = useState('');
   const { setUser } = useUser();
 
   const {
@@ -28,16 +29,16 @@ const OrgInfoForm: React.FC<{ edit?: boolean }> = ({ edit = false }) => {
     value: string | number,
   ) => {
     switch (name) {
-      case "name":
+      case 'name':
         if (!value) {
           return `${label} is required`;
         }
-        if (typeof value === "string" && value.length > 30) {
+        if (typeof value === 'string' && value.length > 30) {
           return `${label} can not be longer than 30 characters`;
         }
-        return "";
+        return '';
       default:
-        return "";
+        return '';
     }
   };
 
@@ -47,9 +48,9 @@ const OrgInfoForm: React.FC<{ edit?: boolean }> = ({ edit = false }) => {
     value: string | number,
   ) => {
     const errorMessage = validateInput(name, label, value);
-    const status = errorMessage ? "error" : "default";
+    const status = errorMessage ? 'error' : 'default';
 
-    if (name === "name") {
+    if (name === 'name') {
       setName(value as string);
       setNameStatus(status);
       setNameMessage(errorMessage);
@@ -70,7 +71,7 @@ const OrgInfoForm: React.FC<{ edit?: boolean }> = ({ edit = false }) => {
   };
 
   const validateForm = () => {
-    const fieldsToValidate = [{ name: "name", label: "Name", value: name }];
+    const fieldsToValidate = [{ name: 'name', label: 'Name', value: name }];
 
     let isValid = true;
 
@@ -92,15 +93,15 @@ const OrgInfoForm: React.FC<{ edit?: boolean }> = ({ edit = false }) => {
     try {
       const data = { name };
 
-      const response = await sendRequest(ORG_CREATE_API, "POST", data, true);
+      const response = await sendRequest(ORG_CREATE_API, 'POST', data, true);
       if (response.status === 200) {
         setMessage(
           <span className="font-bold">
-            {edit ? "Organization Updated" : "Organization Added"}
+            {edit ? 'Organization Updated' : 'Organization Added'}
           </span>,
         );
         setOkFunction(() => {
-          return handleOkRedirect("/", () => setUser(null));
+          return handleOkRedirect('/', () => setUser(null));
         });
         openModal();
       } else {
@@ -110,9 +111,9 @@ const OrgInfoForm: React.FC<{ edit?: boolean }> = ({ edit = false }) => {
       setMessage(
         <span className="font-bold">
           {edit
-            ? "Organization Update Failed: "
-            : "Organization Create Failed: "}
-          {error instanceof Error ? error.message : "Internal Error"}
+            ? 'Organization Update Failed: '
+            : 'Organization Create Failed: '}
+          {error instanceof Error ? error.message : 'Internal Error'}
         </span>,
       );
       setOkFunction(handleOk);
@@ -131,7 +132,7 @@ const OrgInfoForm: React.FC<{ edit?: boolean }> = ({ edit = false }) => {
               <TextField
                 name="name"
                 value={name}
-                error={nameStatus === "error"}
+                error={nameStatus === 'error'}
                 helperText={nameMessage}
                 onChange={handleChange}
                 onBlur={handleChange}

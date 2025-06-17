@@ -1,6 +1,6 @@
 import mongoose, { type InferSchemaType, type Types } from 'mongoose';
 
-import type { User } from './user.server';
+import type { User } from './UserModel';
 
 const ApplicationSchema = new mongoose.Schema(
   {

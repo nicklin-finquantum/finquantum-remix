@@ -1,82 +1,79 @@
-import React, { useEffect, useState } from "react";
-import { Grid, Typography, Box } from "@mui/material";
-import { checkOrgRole, sendRequest } from "../../utils/utils";
-import { APPLICATION_STATISTICS_API } from "../../utils/consts";
+import React, { useEffect, useState } from 'react';
 
-import { Product } from "../../types/product";
-import { useUser } from "../../hooks/useUser";
+import { Card, CardContent } from '~/components/ui/card';
+import { useUser } from '~/hooks/useUser';
+import { Product } from '~/types/product';
+import { APPLICATION_STATISTICS_API } from '~/utils/consts';
+import { isOrgAdmin } from '~/utils/utils';
+
+interface StatisticsItem {
+  key: string;
+  label: string;
+  content: number;
+}
 
 const ApplicationStatisticsTable = () => {
-  const [statisticsData, setstatisticsData] = useState([]);
+  const [statisticsData, setstatisticsData] = useState<StatisticsItem[]>([]);
   const { user } = useUser();
-  const isOrgAdmin = checkOrgRole(user);
+  const isUserOrgAdmin = isOrgAdmin(user);
   const orgId = user?.organization?.id;
   const userId = user?.id;
 
-  useEffect(() => {
-    const getDataList = async () => {
-      const response = await sendRequest(
-        APPLICATION_STATISTICS_API,
-        "GET",
-        {
-          product: Product.MORTGAGE_ANALYSIS,
-          userId: userId ?? user.id,
-          orgId: orgId,
-        },
-        true,
-        isOrgAdmin,
-      );
-      if (response.status === 200 && response.data) {
-        try {
-          interface ResponseData {
-            [key: string]: {
-              count: number;
-              label: string;
-            };
-          }
+  // useEffect(() => {
+  //   const getDataList = async () => {
+  //     if (!user) return;
 
-          const newStats = Object.entries(response.data).map(
-            ([key, { count, label }]: [string, ResponseData]) => {
-              return {
-                key: key,
-                label: label,
-                content: count,
-              };
-            },
-          );
-          setstatisticsData(newStats);
-        } catch (e) {
-          console.log("Couldnt fetch app data", e);
-        }
-      }
-    };
-    getDataList();
-  }, []);
+  //     const response = await sendRequest(
+  //       APPLICATION_STATISTICS_API,
+  //       'GET',
+  //       {
+  //         product: Product.MORTGAGE_ANALYSIS,
+  //         userId: userId ?? user.id,
+  //         orgId: orgId,
+  //       },
+  //       true,
+  //       isUserOrgAdmin,
+  //     );
+  //     if (response.status === 200 && response.data) {
+  //       try {
+  //         const newStats = Object.entries(response.data).map(
+  //           ([key, value]) => {
+  //             const { count, label } = value as { count: number; label: string };
+  //             return {
+  //               key,
+  //               label,
+  //               content: count,
+  //             };
+  //           },
+  //         );
+  //         setstatisticsData(newStats);
+  //       } catch (e) {
+  //         console.log('Couldnt fetch app data', e);
+  //       }
+  //     }
+  //   };
+  //   getDataList();
+  // }, [user, userId, orgId, isUserOrgAdmin]);
 
   return (
-    <Box>
-      <Grid container spacing={2}>
+    <div className="w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {statisticsData.map((item, index) => (
-          <Grid item xs={12} sm={6} md={4} key={index}>
-            <Box
-              border={1}
-              padding={1}
-              borderRadius={2}
-              className="bg-blue-300"
-            >
-              <Box display="flex" justifyContent="left">
-                <Typography variant="body1" fontWeight="bold">
+          <Card key={index} className="bg-blue-50 border-blue-200">
+            <CardContent className="p-4">
+              <div className="flex items-center">
+                <span className="font-semibold text-base">
                   {item.label}:
-                </Typography>
-                <Typography variant="body1" style={{ marginLeft: "0.25rem" }}>
+                </span>
+                <span className="ml-2 text-base">
                   {item.content}
-                </Typography>
-              </Box>
-            </Box>
-          </Grid>
+                </span>
+              </div>
+            </CardContent>
+          </Card>
         ))}
-      </Grid>
-    </Box>
+      </div>
+    </div>
   );
 };
 

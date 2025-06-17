@@ -1,17 +1,18 @@
-import toast from "react-hot-toast";
-import dataJSON from "../../public/data.json";
+import toast from 'react-hot-toast';
+
+import dataJSON from '~/public/data.json';
 
 const createToast = (title: string, msg: string, type: number) => {
   toast.custom((t) => (
     <Box
-      className={`${t.visible ? "animate-enter" : "animate-leave"}
+      className={`${t.visible ? 'animate-enter' : 'animate-leave'}
       max-w-md w-full ${
-        type == "0"
-          ? "bg-[#04b20c]"
-          : type == "1"
-          ? "bg-[#eab90f]"
-          : "bg-[#e13f32]"
-      } shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
+    type == '0'
+      ? 'bg-[#04b20c]'
+      : type == '1'
+        ? 'bg-[#eab90f]'
+        : 'bg-[#e13f32]'
+    } shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
     >
       <Box className="flex-1 w-0 p-4 ">
         <Box className="flex items-start">
@@ -66,7 +67,7 @@ const createToast = (title: string, msg: string, type: number) => {
 //     dataJSON=data;
 //   })
 const fireToast = () => {
-  const alertSettings = localStorage.getItem("alertSettings");
+  const alertSettings = localStorage.getItem('alertSettings');
   if (alertSettings) {
     for (const alertSetting of JSON.parse(alertSettings)) {
       console.log(alertSetting);
@@ -76,33 +77,33 @@ const fireToast = () => {
         : parseFloat(alertSetting.value);
       const para =
         alertSetting.criterion < 2
-          ? "delta_" + alertSetting.para
+          ? 'delta_' + alertSetting.para
           : alertSetting.para;
-      if (alertSetting.id == "ALL") {
+      if (alertSetting.id == 'ALL') {
         Object.keys(dataJSON).map((id: string) => {
           const condition =
-            alertSetting.criterion == "0"
+            alertSetting.criterion == '0'
               ? value <= -1 * dataJSON[id][para]
-              : alertSetting.criterion == "1" || alertSetting.criterion == "3"
-              ? value >= dataJSON[id][para]
-              : alertSetting.criterion == "2"
-              ? value <= dataJSON[id][para]
-              : value == dataJSON[id][para];
+              : alertSetting.criterion == '1' || alertSetting.criterion == '3'
+                ? value >= dataJSON[id][para]
+                : alertSetting.criterion == '2'
+                  ? value <= dataJSON[id][para]
+                  : value == dataJSON[id][para];
           const realValue =
-            alertSetting.criterion == "0"
+            alertSetting.criterion == '0'
               ? dataJSON[id][para] * -1
               : dataJSON[id][para];
           if (condition) {
             const msg = `${alertSetting.para} of ${id} ${
               alertSetting.criterion == 0
-                ? "goes down by"
+                ? 'goes down by'
                 : alertSetting.criterion == 1
-                ? "goes up by"
-                : alertSetting.criterion == 2
-                ? "is smaller than"
-                : alertSetting.criterion == 3
-                ? "is greater than"
-                : "is equal to"
+                  ? 'goes up by'
+                  : alertSetting.criterion == 2
+                    ? 'is smaller than'
+                    : alertSetting.criterion == 3
+                      ? 'is greater than'
+                      : 'is equal to'
             } ${realValue}`;
             createToast(id, msg, alertSetting.type);
           }
@@ -111,29 +112,29 @@ const fireToast = () => {
         const id = alertSetting.id;
 
         const condition =
-          alertSetting.criterion == "0"
+          alertSetting.criterion == '0'
             ? value >= -1 * dataJSON[id][para]
-            : alertSetting.criterion == "1" || alertSetting.criterion == "3"
-            ? value >= dataJSON[id][para]
-            : alertSetting.criterion == "2"
-            ? value <= dataJSON[id][para]
-            : value == dataJSON[id][para];
+            : alertSetting.criterion == '1' || alertSetting.criterion == '3'
+              ? value >= dataJSON[id][para]
+              : alertSetting.criterion == '2'
+                ? value <= dataJSON[id][para]
+                : value == dataJSON[id][para];
         const realValue =
-          alertSetting.criterion == "0"
+          alertSetting.criterion == '0'
             ? dataJSON[id][para] * -1
             : dataJSON[id][para];
 
         if (condition) {
           const msg = `${alertSetting.para} of ${id} ${
             alertSetting.criterion == 0
-              ? "goes down by"
+              ? 'goes down by'
               : alertSetting.criterion == 1
-              ? "goes up by"
-              : alertSetting.criterion == 2
-              ? "is smaller than"
-              : alertSetting.criterion == 3
-              ? "is greater than"
-              : "is equal to"
+                ? 'goes up by'
+                : alertSetting.criterion == 2
+                  ? 'is smaller than'
+                  : alertSetting.criterion == 3
+                    ? 'is greater than'
+                    : 'is equal to'
           } ${realValue}`;
           createToast(id, msg, alertSetting.type);
         }

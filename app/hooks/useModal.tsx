@@ -1,13 +1,14 @@
-import { Button, Dialog, DialogActions, DialogContent } from "@mui/material";
-import React, {
-  useReducer,
-  useState,
-  useCallback,
-  useEffect,
-  useMemo,
-} from "react";
-import ReactDOM from "react-dom";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+import { Button } from '~/components/ui/button';
+
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+} from '~/components/ui/dialog';
 
 interface UseModalResult {
   Modal: React.ReactNode;
@@ -21,19 +22,17 @@ interface UseModalResult {
   handleOkRedirect: (url: string, otherFunction?: () => any) => void;
   handleCancel: () => void;
   handleCancelReload: () => void;
-  setOkText: (message: String) => void;
-  setCancelText: (message: String) => void;
+  setOkText: (text: string) => void;
+  setCancelText: (text: string) => void;
 }
 
 const useModal = (): UseModalResult => {
   const [showModal, setShowModal] = useState<boolean>(false);
-  const [okText, setOkText] = useState<String>("OK");
-  const [cancelText, setCancelText] = useState<String>("Cancel");
+  const [okText, setOkText] = useState<string>('OK');
+  const [cancelText, setCancelText] = useState<string>('Cancel');
   const [message, setMessage] = useState<React.ReactNode>(<></>);
   const [okFunction, setOkFunction] = useState<() => void>(() => {});
-  const [cancelFunction, setCancelFunction] = useState<
-    (() => void) | undefined
-  >(undefined);
+  const [cancelFunction, setCancelFunction] = useState<(() => void) | undefined>(undefined);
   const navigate = useNavigate();
 
   const openModal = useCallback(() => {
@@ -44,76 +43,58 @@ const useModal = (): UseModalResult => {
     setShowModal(false);
   }, []);
 
-  const handleOk = useCallback(
-    () => () => {
-      closeModal();
-    },
-    [],
-  );
+  const handleOk = useCallback(() => {
+    closeModal();
+  }, [closeModal]);
 
-  const handleOkReload = useCallback(
-    () => () => {
-      window.location.reload();
-    },
-    [],
-  );
+  const handleOkReload = useCallback(() => {
+    window.location.reload();
+  }, []);
 
   const handleOkRedirect = useCallback(
     (url: string, otherFunction?: () => any) => {
       return () => {
         closeModal();
-        otherFunction && otherFunction();
+        otherFunction?.();
         navigate(url);
       };
     },
-    [navigate],
+    [navigate, closeModal],
   );
 
-  const handleCancel = useCallback(
-    () => () => {
-      closeModal();
-    },
-    [],
-  );
+  const handleCancel = useCallback(() => {
+    closeModal();
+  }, [closeModal]);
 
-  const handleCancelReload = useCallback(
-    () => () => {
-      window.location.reload();
-    },
-    [],
-  );
+  const handleCancelReload = useCallback(() => {
+    window.location.reload();
+  }, []);
 
   const Modal = (
-    <Dialog
-      maxWidth="md"
-      open={showModal}
-      className="modal-container flex flex-col text-lg p3"
-    >
-      <DialogContent className="modal-content !p-10 grid w-full">
-        {message}
-      </DialogContent>
-      <DialogActions className="modal-buttons self-end flex gap-8">
-        <Button
-          className="modal-ok"
-          onClick={okFunction ?? handleOk}
-          type="button"
-          variant="contained"
-          color="primary"
-        >
-          {okText}
-        </Button>
-        {cancelFunction && (
+    <Dialog open={showModal} onOpenChange={setShowModal}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader className="space-y-4">
+          {message}
+        </DialogHeader>
+        <DialogFooter className="flex justify-end gap-4">
           <Button
-            className="modal-cancel"
-            onClick={cancelFunction}
+            variant="default"
+            onClick={okFunction ?? handleOk}
             type="button"
-            variant="outlined"
-            color="secondary"
           >
-            {cancelText}
+            {okText}
           </Button>
-        )}
-      </DialogActions>
+          {cancelFunction && (
+            <Button
+              variant="outline"
+              onClick={cancelFunction}
+              type="button"
+            >
+              {cancelText}
+            </Button>
+          )}
+        </DialogFooter>
+      </DialogContent>
     </Dialog>
   );
 

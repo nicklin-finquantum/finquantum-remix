@@ -1,177 +1,149 @@
-import React, { useState, useEffect } from "react";
-import { checkOrgRole, fetchDataList, sendRequest } from "../../utils/utils";
-import {
-  APPLICATION_LIST_API,
-  APPLICATION_LIST_ARCHIVED_API,
-  APPLICATION_LIST_ORG_ALL_API,
-  APPLICATION_LIST_ORG_ARCHIVED_API,
-  ORG_GET_API,
-  APPLICATION_UPDATE_STATUS_API,
-} from "../../utils/consts";
-import { APPLICATION } from "../../types/application";
-import { Product } from "../../types/product";
-import { useLocation, useParams } from "react-router-dom";
-import { DataGrid, gridClasses, GridColDef } from "@mui/x-data-grid";
-import { Box, MenuItem, Select } from "@mui/material";
-import useModal from "../../hooks/useModal";
-import { useUser } from "../../hooks/useUser";
-import { OverviewType } from "../../types/overviewType";
-import useSearch from "../../hooks/useSearch";
+import { useNavigate } from '@remix-run/react';
+import { Info } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 
-const ApplicationStatusEdit: React.FC<{
-  product?: Product;
-  type?: OverviewType;
-  isArchive?: boolean;
-}> = ({
-  product = Product.MORTGAGE_ANALYSIS,
-  type = "overview",
-  isArchive = false,
-}) => {
-  const location = useLocation();
+import { Alert, AlertDescription } from '~/components/ui/alert';
+import { Button } from '~/components/ui/button';
+import { Card, CardContent } from '~/components/ui/card';
+import { Input } from '~/components/ui/input';
+import { Label } from '~/components/ui/label';
+import { useUser } from '~/hooks/useUser';
+import { Product } from '~/types/product';
+import { APPLICATION_UPDATE_STATUS_API } from '~/utils/consts';
+import { sendRequest } from '~/utils/utils';
+
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '~/components/ui/tooltip';
+
+const ApplicationStatusEdit: React.FC<{ applicationId: string }> = ({ applicationId }) => {
+  const [status, setStatus] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const { user } = useUser();
-  const isOrgAdmin = checkOrgRole(user);
-  const { Modal, openModal, setMessage, setOkFunction, handleOk } = useModal();
-
-  const { filteredList, setFullList, SearchField } = useSearch<APPLICATION>(
-    ["userApplicationId"],
-    "Enter File Number (example: 12334456)",
-  );
-
-  const [statusList, setStatusList] = useState<string[]>([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const getDataList = async () => {
+    const getApplicationStatus = async () => {
+      if (!user) return;
+
       try {
-        const data = await fetchDataList(
-          isArchive
-            ? isOrgAdmin
-              ? APPLICATION_LIST_ORG_ARCHIVED_API
-              : APPLICATION_LIST_ARCHIVED_API
-            : isOrgAdmin
-            ? APPLICATION_LIST_ORG_ALL_API
-            : APPLICATION_LIST_API,
-          { product },
+        const response = await sendRequest(
+          APPLICATION_UPDATE_STATUS_API,
+          'GET',
+          {
+            id: applicationId,
+            product: Product.MORTGAGE_ANALYSIS,
+            status: '',
+          },
+          true,
         );
-        setFullList(data.applicationList);
+        if (response.status === 200 && response.data) {
+          setStatus(response.data.status);
+        }
       } catch (error) {
-        console.error("Failed to fetch application list:", error);
+        console.error('Failed to fetch application status:', error);
+        setError('Failed to fetch application status');
       }
     };
+    getApplicationStatus();
+  }, [applicationId, user]);
 
-    const getStatusList = async () => {
-      try {
-        const data = await fetchDataList(ORG_GET_API, {
-          product,
-        });
-        setStatusList(data.organization.mortgage_status_custom);
-      } catch (error) {
-        console.error("Failed to fetch status list:", error);
-      }
-    };
-    getStatusList();
-    getDataList();
-  }, [location]);
+  const handleStatusChange = async (newStatus: string) => {
+    if (!user) return;
 
-  const handleStatusChange = async (
-    applicationId: string,
-    newStatus: string,
-  ) => {
     try {
       const response = await sendRequest(
         APPLICATION_UPDATE_STATUS_API,
-        "GET",
+        'GET',
         {
           id: applicationId,
+          product: Product.MORTGAGE_ANALYSIS,
           status: newStatus,
-          product: product,
         },
         true,
       );
       if (response.status === 200) {
-        setFullList((prevList) =>
-          prevList.map((application) =>
-            application.id === applicationId
-              ? { ...application, status: newStatus }
-              : application,
-          ),
-        );
-      } else {
-        throw new Error(response.message);
+        setStatus(newStatus);
+        setSuccess('Status updated successfully');
+        setError('');
       }
     } catch (error) {
-      setMessage(
-        <span>
-          <span className="font-bold">{"Status Update Failed: "}</span>,
-          {error instanceof Error ? error.message : "Internal Error"}
-        </span>,
-      );
-      setOkFunction(handleOk);
-      openModal();
+      console.error('Failed to update application status:', error);
+      setError('Failed to update application status');
+      setSuccess('');
     }
   };
 
-  const columns: GridColDef[] = [
-    //{ field: "owner", headerName: "Owner", flex: 1 },
-    { field: "userApplicationId", headerName: "File No.", flex: 1 },
-    {
-      field: "status",
-      headerName: "Status",
-      flex: 2,
-      renderCell: (params) => {
-        const applicationId = params.row.id;
-        return (
-          <Box>
-            <Select
-              fullWidth
-              value={params.value}
-              onChange={(e) =>
-                handleStatusChange(applicationId, e.target.value)
-              }
-              displayEmpty
-              sx={{
-                width: "calc(100% - 8px)",
-              }}
-            >
-              {statusList.map((status) => (
-                <MenuItem key={status} value={status}>
-                  {status}
-                </MenuItem>
-              ))}
-            </Select>
-          </Box>
-        );
-      },
-    },
-  ];
-
   return (
-    <Box className="h-full">
-      {Modal}
-      {SearchField}
-      <Box className="datagrid-container">
-        <DataGrid
-          scrollbarSize={4}
-          rows={filteredList}
-          initialState={{
-            pagination: {
-              paginationModel: { pageSize: 25, page: 0 },
-            },
-          }}
-          columns={columns}
-          getRowHeight={() => "auto"}
-          sx={{
-            [`& .${gridClasses.row}`]: {
-              py: 1,
-            },
-            [`& .${gridClasses.cell}`]: {
-              height: "100%",
-              alignSelf: "center",
-            },
-          }}
-          localeText={{ noRowsLabel: "No file found" }}
-        />
-      </Box>
-    </Box>
+    <Card className="w-full max-w-2xl mx-auto">
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-semibold">Application Status</h2>
+          <Button
+            variant="outline"
+            onClick={() => navigate(-1)}
+            className="text-gray-600 hover:text-gray-900"
+          >
+            Back
+          </Button>
+        </div>
+
+        {error && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        {success && (
+          <Alert className="mb-4 bg-green-50 text-green-800 border-green-200">
+            <AlertDescription>{success}</AlertDescription>
+          </Alert>
+        )}
+
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Label htmlFor="status" className="text-base font-medium">
+              Current Status:
+            </Label>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <Info className="h-4 w-4 text-gray-500" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Current status of the application</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          <Input
+            id="status"
+            value={status}
+            readOnly
+            className="bg-gray-50"
+          />
+        </div>
+
+        <div className="mt-6 space-y-4">
+          <h3 className="text-lg font-medium">Update Status</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <Button
+              variant={status === 'Approved' ? 'default' : 'outline'}
+              onClick={() => handleStatusChange('Approved')}
+              className="w-full"
+            >
+              Approve
+            </Button>
+            <Button
+              variant={status === 'Rejected' ? 'default' : 'outline'}
+              onClick={() => handleStatusChange('Rejected')}
+              className="w-full"
+            >
+              Reject
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

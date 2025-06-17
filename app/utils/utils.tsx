@@ -1,6 +1,11 @@
-import { ReactNode } from "react";
-import { Product } from "../types/product";
-import { StatusType } from "../types/statusType";
+import type { ReactNode } from 'react';
+
+import type { User } from '~/models/UserModel';
+import OrgRole from '~/types/orgRole';
+import { Product } from '~/types/product';
+import type { StatusType } from '~/types/statusType';
+import UserRole from '~/types/userRole';
+
 import {
   AUTH_PATH,
   INCOME_ANALYSIS_URL,
@@ -8,11 +13,7 @@ import {
   MORTGAGE_ANALYSIS_URL,
   SIGNIN_URL,
   TOKEN_NAME,
-} from "./consts";
-import OrgRole from "../types/orgRole";
-import { USER } from "../types/user";
-import UserRole from "../types/userRole";
-import { Box, Typography } from "@mui/material";
+} from './consts';
 
 const buildQueryString = (params: Record<string, any>): string => {
   const query = new URLSearchParams();
@@ -30,9 +31,9 @@ const sendRequest = async (
   endpoint: string,
   method: string,
   data?: Record<any, any> | FormData,
-  auth: boolean = false,
-  admin: boolean = false,
-  json: boolean = true,
+  auth = false,
+  admin = false,
+  json = true,
 ): Promise<any> => {
   try {
     const accessToken = localStorage.getItem(TOKEN_NAME);
@@ -48,19 +49,19 @@ const sendRequest = async (
 
     if (admin) data = { ...data, admin: admin };
     // Default headers
-    const defaultHeaders =
-      method === "POST" && !(data instanceof FormData)
+    const defaultHeaders: Record<string, string> =
+      method === 'POST' && !(data instanceof FormData)
         ? {
-            "Content-Type": "application/json",
-          }
+          'Content-Type': 'application/json',
+        }
         : {};
 
-    const authHeaders = {
-      "x-access-token": accessToken ?? "",
+    const authHeaders: Record<string, string> = {
+      'x-access-token': accessToken ?? '',
     };
 
     // Combine the default and extra headers
-    const headers = {
+    const headers: Record<string, string> = {
       ...defaultHeaders,
       ...(auth ? authHeaders : {}),
     };
@@ -69,17 +70,17 @@ const sendRequest = async (
     let fetchOptions: RequestInit = {
       method: method,
       headers: headers,
-      credentials: "include",
+      credentials: 'include',
     };
 
-    if (method === "POST") {
+    if (method === 'POST') {
       fetchOptions = {
         ...fetchOptions,
         body: data instanceof FormData ? data : JSON.stringify(data ?? {}),
       };
       response = await fetch(baseUrl, fetchOptions);
-    } else if (method === "GET") {
-      const queryString = data ? `?${buildQueryString(data)}` : "";
+    } else if (method === 'GET') {
+      const queryString = data ? `?${buildQueryString(data)}` : '';
       const fullUrl = baseUrl + queryString;
       response = await fetch(fullUrl, fetchOptions);
     } else {
@@ -95,20 +96,20 @@ const sendRequest = async (
         response.status !== 403 &&
         response.status !== 500)
     ) {
-      throw new Error("Network response was not ok");
+      throw new Error('Network response was not ok');
     }
 
     const responseData = json ? await response.json() : response;
     if (json) responseData.status = response.status;
     return responseData;
   } catch (error) {
-    console.error("Error:", error);
+    console.error('Error:', error);
     throw error;
   }
 };
 
-const getUser = async () => {
-  const response = await sendRequest(ME_API, "GET", {}, true);
+export const getUser = async () => {
+  const response = await sendRequest(ME_API, 'GET', {}, true);
   if (response.status === 200 && response.data && response.data.user) {
     return {
       id: response.data.user._id,
@@ -119,20 +120,20 @@ const getUser = async () => {
   return null;
 };
 
-const getResponseClassName = (responseStatus: StatusType) => {
+export const getResponseClassName = (responseStatus: StatusType) => {
   switch (responseStatus) {
-    case "success":
-      return "form-message-success";
-    case "error":
-      return "form-message-error";
+    case 'success':
+      return 'form-message-success';
+    case 'error':
+      return 'form-message-error';
     default:
-      return "form-message-default";
+      return 'form-message-default';
   }
 };
 
-const formatPhoneNumber = (value: string) => {
+export const formatPhoneNumber = (value: string) => {
   // Remove all non-digit characters
-  const digits = value.replace(/\D/g, "");
+  const digits = value.replace(/\D/g, '');
 
   // Format digits based on their length
   if (digits.length <= 3) {
@@ -147,7 +148,7 @@ const formatPhoneNumber = (value: string) => {
   }
 };
 
-const getProductUrl = (product: Product) => {
+export const getProductUrl = (product: Product) => {
   if (product === Product.INCOME_ANALYSIS) {
     return INCOME_ANALYSIS_URL;
   } else {
@@ -155,42 +156,42 @@ const getProductUrl = (product: Product) => {
   }
 };
 
-const formatDate = (timestamp: string): string => {
+export const formatDate = (timestamp: string): string => {
   const dateObj = new Date(timestamp);
   const options: Intl.DateTimeFormatOptions = {
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
   };
-  return dateObj.toLocaleDateString("en-US", options);
+  return dateObj.toLocaleDateString('en-US', options);
 };
 
-const formatTime = (timestamp: string) => {
+export const formatTime = (timestamp: string) => {
   const dateObj = new Date(timestamp);
   const time =
     dateObj
-      .toLocaleTimeString("en-US", { hour12: false })
-      .split(":")
+      .toLocaleTimeString('en-US', { hour12: false })
+      .split(':')
       .slice(0, 2)
-      .join(":") +
-    ":" +
-    dateObj.getSeconds().toString().padStart(2, "0");
+      .join(':') +
+    ':' +
+    dateObj.getSeconds().toString().padStart(2, '0');
   return time;
 };
 
-const checkAdmin = (user: USER) => {
-  return user?.role === UserRole.SUPERADMIN;
+export const isSuperAdmin = (user: User | null) => {
+  return user && user?.role === UserRole.SUPERADMIN;
 };
 
-const checkOrgRole = (user: USER) => {
-  return user?.organization?.role === OrgRole.ADMIN;
+export const isOrgAdmin = (user: User | null) => {
+  return user && user?.organization?.role === OrgRole.ADMIN;
 };
 
 // Fetch Data
-const fetchDataList = async (apiEndpoint: string, params: any) => {
+export const fetchDataList = async (apiEndpoint: string, params: any) => {
   const response = await sendRequest(
     apiEndpoint,
-    "GET",
+    'GET',
     params,
     true,
     params.hasOrg,
@@ -198,11 +199,11 @@ const fetchDataList = async (apiEndpoint: string, params: any) => {
   if (response.status === 200 && response.data) {
     return response.data;
   }
-  throw new Error(response.message || "Failed to fetch data");
+  throw new Error(response.message || 'Failed to fetch data');
 };
 
 // Handle Archive/Archive Confirmation
-const handleArchiveConfirmation = (
+export const handleArchiveConfirmation = (
   name: string,
   unarchive: boolean,
   handleArchiveOk: (id: string, unarchive: boolean) => void,
@@ -213,15 +214,15 @@ const handleArchiveConfirmation = (
   setCancelFunction: (fn: () => void) => void,
 ) => {
   setMessage(
-    <Box>
-      <Box>
-        Are you sure you want to {unarchive ? "unarchive" : "archive"}{" "}
+    <div className="space-y-2">
+      <div>
+        Are you sure you want to {unarchive ? 'unarchive' : 'archive'}{' '}
         <span className="text-blue-500">{name}</span>?
-      </Box>
-      <Box>
-        All associated data will be {unarchive ? "unarchived" : "archived"} too.
-      </Box>
-    </Box>,
+      </div>
+      <div>
+        All associated data will be {unarchive ? 'unarchived' : 'archived'} too.
+      </div>
+    </div>,
   );
   setOkFunction(() => () => handleArchiveOk(name, unarchive));
   setCancelFunction(handleCancel);
@@ -229,7 +230,7 @@ const handleArchiveConfirmation = (
 };
 
 // Handle API Request for Archive/Archive
-const handleArchiveApiRequest = async (
+export const handleArchiveApiRequest = async (
   apiEndpoint: string,
   params: any,
   unarchive: boolean,
@@ -245,7 +246,7 @@ const handleArchiveApiRequest = async (
   try {
     const response = await sendRequest(
       apiEndpoint,
-      "POST",
+      'POST',
       params,
       true,
       params.hasOrg,
@@ -253,7 +254,7 @@ const handleArchiveApiRequest = async (
     if (response.status === 200) {
       setMessage(
         <span className="font-bold">{`${type} ${
-          unarchive ? "unarchived" : "archived"
+          unarchive ? 'unarchived' : 'archived'
         } successfully`}</span>,
       );
       setOkFunction(unarchive ? handleOkRedirect : handleOkReload);
@@ -262,55 +263,35 @@ const handleArchiveApiRequest = async (
     }
   } catch (error) {
     setMessage(
-      <Box className="items-center">
-        <Box className="font-bold">{`${type} ${
-          unarchive ? "unarchive" : "archive"
-        } Failed. `}</Box>
-        <Box>{error instanceof Error ? error.message : "Internal Error"}</Box>
-      </Box>,
+      <div className="space-y-2">
+        <div className="font-bold">{`${type} ${
+          unarchive ? 'unarchive' : 'archive'
+        } Failed. `}</div>
+        <div>{error instanceof Error ? error.message : 'Internal Error'}</div>
+      </div>,
     );
     setOkFunction(handleOk);
   } finally {
-    setCancelFunction(undefined);
+    setCancelFunction(() => {});
     openModal();
   }
 };
 
-const capitalizeFirstLetter = (string) => {
-  return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+export const capitalizeFirstLetter = (str: string): string => {
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 };
 
-const inputValidation = (userInput) => {
-  
+export const inputValidation = (userInput: string): { isValid: boolean; errorMessage: string } => {
   // List of characters to disallow in user input
   // < > & " ' / `
-  const forbiddenCharacters = /[<>&"'\/`]/g;
-  
+  const forbiddenCharacters = /[<>&"'/`]/g;
+
   // Check if input contains forbidden characters
   const matches = userInput.match(forbiddenCharacters);
   const disallowedChars = matches ? Array.from(new Set(matches)).join(' ') : '';
 
   // Set an error message if the input is not valid
-  const errorMessage = matches ? `Input contains disallowed characters: ${disallowedChars}` : "";
+  const errorMessage = matches ? `Input contains disallowed characters: ${disallowedChars}` : '';
 
   return { isValid: !matches, errorMessage };
-  
-};
-
-export {
-  sendRequest,
-  getResponseClassName,
-  buildQueryString,
-  getUser,
-  formatPhoneNumber,
-  getProductUrl,
-  formatDate,
-  formatTime,
-  checkAdmin,
-  checkOrgRole,
-  fetchDataList,
-  handleArchiveApiRequest,
-  handleArchiveConfirmation,
-  capitalizeFirstLetter,
-  inputValidation
 };

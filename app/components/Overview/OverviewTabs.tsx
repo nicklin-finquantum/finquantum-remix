@@ -1,13 +1,14 @@
-import React, { useEffect } from "react";
-import { useLocation } from "react-router-dom";
-import Tabs from "@mui/material/Tabs";
-import Tab from "@mui/material/Tab";
-import Box from "@mui/material/Box";
-import { Product } from "../../types/product";
-import ApplicationList from "../../components/Application/ApplicationList";
-import ApplicantList from "../../components/Applicant/ApplicantList";
-import ReportList from "../../components/Report/ReportList";
-import { OverviewType } from "../../types/overviewType";
+import Box from '@mui/material/Box';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
+import React, { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+
+import ApplicantList from '~/components/Applicant/ApplicantList';
+import ApplicationList from '~/components/Application/ApplicationList';
+import ReportList from '~/components/Report/ReportList';
+import type { OverviewType } from '~/types/overviewType';
+import type { Product } from '~/types/product';
 
 const tabConfig: {
   label: string;
@@ -19,9 +20,9 @@ const tabConfig: {
     getAll?: boolean;
   }>;
 }[] = [
-  { label: "Files", component: ApplicationList },
-  { label: "Applicants", component: ApplicantList },
-  { label: "Reports", component: ReportList },
+  { label: 'Files', component: ApplicationList },
+  { label: 'Applicants', component: ApplicantList },
+  { label: 'Reports', component: ReportList },
 ];
 
 const OverviewTabs: React.FC<{
@@ -32,7 +33,7 @@ const OverviewTabs: React.FC<{
   getAll?: boolean;
 }> = ({
   product,
-  type = "overview",
+  type = 'overview',
   isArchive = false,
   download = false,
   getAll = false,
@@ -41,7 +42,7 @@ const OverviewTabs: React.FC<{
 
   const getTabIndexFromHash = (hash: string) => {
     // Remove query parameters from hash
-    const cleanHash = hash.split("?")[0];
+    const cleanHash = hash.split('?')[0];
     const tabIndex = tabConfig.findIndex(
       (tab) => `#${tab.label.toLowerCase()}` === cleanHash,
     );
@@ -69,15 +70,15 @@ const OverviewTabs: React.FC<{
 
   return (
     <Box
-      sx={{ width: "100%" }}
-      className={isArchive ? "archive-tabs" : "overview-tabs"}
+      sx={{ width: '100%' }}
+      className={isArchive ? 'archive-tabs' : 'overview-tabs'}
     >
       {isArchive && (
         <Box className="info-card">
           All files will be stored for 30 days from the date of creation.
         </Box>
       )}
-      <Box sx={{ borderBottom: 1, borderColor: "Boxider" }}>
+      <Box sx={{ borderBottom: 1, borderColor: 'Boxider' }}>
         <Tabs
           value={selectedTabIndex}
           onChange={handleTabChange}

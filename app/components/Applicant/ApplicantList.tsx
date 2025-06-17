@@ -1,7 +1,15 @@
-import React, { useEffect, useRef, useState } from "react";
+import { Archive, Unarchive } from '@mui/icons-material';
+import { Box, ListItemIcon, Typography, Tooltip } from '@mui/material';
+import CircularProgress from '@mui/material/CircularProgress';
+import type { GridColDef } from '@mui/x-data-grid';
+import { DataGrid, gridClasses } from '@mui/x-data-grid';
+import debounce from 'lodash.debounce';
+import React, { useEffect, useRef, useState } from 'react';
+import { Link, useLocation, useParams } from 'react-router-dom';
+
 import {
-  checkAdmin,
-  checkOrgRole,
+  isSuperAdmin,
+  isOrgAdmin,
   fetchDataList,
   formatDate,
   formatTime,
@@ -9,7 +17,10 @@ import {
   handleArchiveApiRequest,
   handleArchiveConfirmation,
   sendRequest,
-} from "../../utils/utils";
+} from '~/utils/utils';
+
+import WebsocketService from '~/Websockets/WebsocketService';
+import type { APPLICANT } from '~/~/s/applicant';
 import {
   APPLICANT_ARCHIVE_API,
   APPLICANT_LIST_ALL_API,
@@ -21,21 +32,13 @@ import {
   APPLICANT_UNARCHIVE_API,
   FILE_DOWNLOAD_API,
   OVERVIEW_APPLICANT_PATH,
-} from "../../utils/consts";
-import { APPLICANT } from "../../types/applicant";
-import { Product } from "../../types/product";
-import { Link, useLocation, useParams } from "react-router-dom";
-import { DataGrid, GridColDef, gridClasses } from "@mui/x-data-grid";
-import { Box, ListItemIcon, Typography, Tooltip } from "@mui/material";
-import { Archive, Unarchive } from "@mui/icons-material";
-import useModal from "../../hooks/useModal";
-import { FILE } from "../../types/file";
-import { OverviewType } from "../../types/overviewType";
-import useSearch from "../../hooks/useSearch";
-import { useUser } from "../../hooks/useUser";
-import WebsocketService from "../Websockets/WebsocketService";
-import CircularProgress from "@mui/material/CircularProgress";
-import debounce from "lodash.debounce";
+} from '~/~/s/consts';
+import type { FILE } from '~/~/s/file';
+import type { OverviewType } from '~/~/s/overviewType';
+import type { Product } from '~/~/s/product';
+import useModal from '~/~/s/useModal';
+import useSearch from '~/~/s/useSearch';
+import { useUser } from '~/~/s/useUser';
 
 const ApplicantList: React.FC<{
   product: Product;
@@ -47,8 +50,8 @@ const ApplicantList: React.FC<{
   const location = useLocation();
   const { user } = useUser();
   orgId = orgId || user?.organization?.id;
-  const isAdmin = checkAdmin(user);
-  const isOrgAdmin = checkOrgRole(user);
+  const isAdmin = isAdmin(user);
+  const isOrgAdmin = isOrgAdmin(user);
   const {
     Modal,
     openModal,
@@ -64,8 +67,8 @@ const ApplicantList: React.FC<{
 
   const { filteredList, setFullList, SearchField, setFilteredList, fullList } =
     useSearch<APPLICANT>(
-      ["userApplicantId", "owner", "userApplicationId"],
-      "Enter Applicant ID (example: GM124556)",
+      ['userApplicantId', 'owner', 'userApplicationId'],
+      'Enter Applicant ID (example: GM124556)',
     );
 
   const websocketServicesRef = useRef([]);
@@ -76,16 +79,16 @@ const ApplicantList: React.FC<{
       try {
         const data = await fetchDataList(
           isArchive
-            ? getAll && type === "admin" && isAdmin
+            ? getAll && type === 'admin' && isAdmin
               ? APPLICANT_LIST_ALL_ARCHIVED_API
               : isOrgAdmin
-              ? APPLICANT_LIST_ORG_ARCHIVED_API
-              : APPLICANT_LIST_ARCHIVED_API
-            : getAll && type === "admin" && isAdmin
-            ? APPLICANT_LIST_ALL_API
-            : isOrgAdmin
-            ? APPLICANT_LIST_ORG_ALL_API
-            : APPLICANT_LIST_API,
+                ? APPLICANT_LIST_ORG_ARCHIVED_API
+                : APPLICANT_LIST_ARCHIVED_API
+            : getAll && type === 'admin' && isAdmin
+              ? APPLICANT_LIST_ALL_API
+              : isOrgAdmin
+                ? APPLICANT_LIST_ORG_ALL_API
+                : APPLICANT_LIST_API,
           {
             product,
             applicationId,
@@ -95,12 +98,12 @@ const ApplicantList: React.FC<{
         const newDataList = data.applicantList.map((item) => ({
           ...item,
           creationTime:
-            formatDate(item.createdAt) + " " + formatTime(item.createdAt),
+            formatDate(item.createdAt) + ' ' + formatTime(item.createdAt),
         }));
         //console.log("Applicant List was set originally");
         setFullList(newDataList);
       } catch (error) {
-        console.error("Failed to fetch applicant list:", error);
+        console.error('Failed to fetch applicant list:', error);
       }
     };
     getDataList();
@@ -168,11 +171,11 @@ const ApplicantList: React.FC<{
           ...newConnections,
         ];
         console.log(
-          "Count of document ws --- ",
+          'Count of document ws --- ',
           websocketServicesRef.current.length,
         );
       } catch (e) {
-        console.error("Error connecting to WebSocket:", e);
+        console.error('Error connecting to WebSocket:', e);
       }
     };
 
@@ -185,7 +188,7 @@ const ApplicantList: React.FC<{
         wsService.websocketService.closeFileSocket();
       });
       console.log(
-        "Closing of document ws --- ",
+        'Closing of document ws --- ',
         websocketServicesRef.current.length,
       );
     };
@@ -195,7 +198,7 @@ const ApplicantList: React.FC<{
     //console.log('WebSocket message received:', message);
 
     try {
-      let fileId = message.fileId;
+      const fileId = message.fileId;
       // Update applicant.fileInputs.creditReports.status.percent
 
       // Update filtered list for UI
@@ -229,7 +232,7 @@ const ApplicantList: React.FC<{
         }),
       );
     } catch (e) {
-      console.error("Error updating file status:", e);
+      console.error('Error updating file status:', e);
     }
   };
   const handleArchive = (id: string, name: string, unarchive: boolean) => {
@@ -251,7 +254,7 @@ const ApplicantList: React.FC<{
       unarchive ? APPLICANT_UNARCHIVE_API : APPLICANT_ARCHIVE_API,
       { product, id, ...(isOrgAdmin && { orgId }) },
       unarchive,
-      "Applicant",
+      'Applicant',
       setMessage,
       setOkFunction,
       setCancelFunction,
@@ -267,35 +270,35 @@ const ApplicantList: React.FC<{
     try {
       const response = await sendRequest(
         FILE_DOWNLOAD_API,
-        "POST",
+        'POST',
         {
           product,
           id,
           ...((isOrgAdmin || isAdmin) && { orgId }),
         },
         true,
-        (type !== "admin" && isOrgAdmin) || (type === "admin" && isAdmin),
+        (type !== 'admin' && isOrgAdmin) || (type === 'admin' && isAdmin),
         false,
       );
       if (response.status === 200) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
+        const a = document.createElement('a');
         a.href = url;
         a.download = name;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
-        setMessage("Download Initiated. Please check your Downloads folder.");
+        setMessage('Download Initiated. Please check your Downloads folder.');
       } else {
         throw new Error(response.message);
       }
     } catch (error) {
       setMessage(
         <span>
-          {"File Download Failed"}
-          {error instanceof Error ? error.message : "Internal Error"}
+          {'File Download Failed'}
+          {error instanceof Error ? error.message : 'Internal Error'}
         </span>,
       );
     } finally {
@@ -306,50 +309,50 @@ const ApplicantList: React.FC<{
 
   const columns: GridColDef[] = [
     {
-      field: "userApplicantId",
-      headerName: "Applicant ID",
+      field: 'userApplicantId',
+      headerName: 'Applicant ID',
       flex: 1,
-      headerAlign: "left",
+      headerAlign: 'left',
     },
     {
-      field: "userApplicationId",
-      headerName: "File No.",
+      field: 'userApplicationId',
+      headerName: 'File No.',
       flex: 1,
-      headerAlign: "left",
+      headerAlign: 'left',
     },
-    { field: "owner", headerName: "Owner", flex: 1, headerAlign: "left" },
+    { field: 'owner', headerName: 'Owner', flex: 1, headerAlign: 'left' },
     {
-      field: "creationTime",
-      headerName: "Creation Time",
+      field: 'creationTime',
+      headerName: 'Creation Time',
       flex: 1,
-      headerAlign: "left",
+      headerAlign: 'left',
     },
     {
-      field: "documents",
-      headerName: "Documents",
+      field: 'documents',
+      headerName: 'Documents',
       sortable: false,
       flex: 1.5,
-      headerAlign: "left",
+      headerAlign: 'left',
       renderCell: (param) => {
         const documents = param.row?.fileInputs
           ? Object.values(param.row.fileInputs).flatMap((fileList: FILE[]) =>
-              fileList.map((file) => ({
-                name: file.name,
-                percent: file.status.percent,
-                error: file.status.error,
-                textStatus: file.status.text,
-                textDetailed: file.status.text_detailed,
-                id: file.id,
-              })),
-            )
+            fileList.map((file) => ({
+              name: file.name,
+              percent: file.status.percent,
+              error: file.status.error,
+              textStatus: file.status.text,
+              textDetailed: file.status.text_detailed,
+              id: file.id,
+            })),
+          )
           : [];
 
         return (
           <Box
             sx={{
-              display: "flex",
-              flexDirection: "column",
-              overflow: "hidden",
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
             }}
           >
             {documents.map((document, index) => (
@@ -357,9 +360,9 @@ const ApplicantList: React.FC<{
                 <Box
                   sx={{
                     flexGrow: 1,
-                    display: "flex",
-                    flexDirection: "column",
-                    overflow: "hidden",
+                    display: 'flex',
+                    flexDirection: 'column',
+                    overflow: 'hidden',
                   }}
                 >
                   {document.percent === 100 && !document.error ? (
@@ -367,12 +370,12 @@ const ApplicantList: React.FC<{
                       variant="body1"
                       sx={
                         isArchive
-                          ? { overflowWrap: "break-word" }
+                          ? { overflowWrap: 'break-word' }
                           : {
-                              overflowWrap: "break-word",
-                              textDecoration: "underline",
-                              cursor: "pointer",
-                            }
+                            overflowWrap: 'break-word',
+                            textDecoration: 'underline',
+                            cursor: 'pointer',
+                          }
                       }
                       onClick={
                         isArchive
@@ -386,7 +389,7 @@ const ApplicantList: React.FC<{
                   ) : (
                     <Typography
                       variant="body1"
-                      sx={{ overflowWrap: "break-word" }}
+                      sx={{ overflowWrap: 'break-word' }}
                     >
                       {document.name}
                     </Typography>
@@ -406,16 +409,16 @@ const ApplicantList: React.FC<{
                           size={40}
                           variant="determinate"
                           value={100}
-                          sx={{ color: "gray" }}
+                          sx={{ color: 'gray' }}
                         />
                         <CircularProgress
                           value={document.percent}
                           size={40}
                           sx={{
-                            position: "absolute",
+                            position: 'absolute',
                             top: 0,
                             left: 0,
-                            color: "primary.main",
+                            color: 'primary.main',
                           }}
                         />
                         <Box
@@ -445,7 +448,7 @@ const ApplicantList: React.FC<{
                           size={40}
                           variant="determinate"
                           value={100}
-                          sx={{ color: "primary.main" }}
+                          sx={{ color: 'primary.main' }}
                         />
                         <Box
                           top={0}
@@ -464,12 +467,12 @@ const ApplicantList: React.FC<{
                       </Box>
                     ) : (
                       <Tooltip
-                        title={
-                          <Typography variant={"caption"}>
+                        title={(
+                          <Typography variant={'caption'}>
                             We are unable to process this document as the
                             content is either incomplete or cropped. Please make
                             sure it is a complete CreditKarma document in PDF
-                            format and try again; refer to our{" "}
+                            format and try again; refer to our{' '}
                             <Link
                               className="text-sky-400 underline"
                               to="https://docs.google.com/document/d/1VqmWPB-I1zn4DhDfK0nEIyErJjo7aH0cAucMCLYzOuw/edit"
@@ -477,8 +480,8 @@ const ApplicantList: React.FC<{
                               rel="noopener"
                             >
                               report download instructions
-                            </Link>{" "}
-                            as needed. If the issue persists, please{" "}
+                            </Link>{' '}
+                            as needed. If the issue persists, please{' '}
                             <Link
                               className="text-sky-400 underline"
                               to="mailto: customersupport@finquantuminc.com"
@@ -489,7 +492,7 @@ const ApplicantList: React.FC<{
                             </Link>
                             .
                           </Typography>
-                        }
+                        )}
                       >
                         <Box
                           position="relative"
@@ -502,7 +505,7 @@ const ApplicantList: React.FC<{
                             size={40}
                             variant="determinate"
                             value={100}
-                            sx={{ color: "error.main" }}
+                            sx={{ color: 'error.main' }}
                           />
                           <Box
                             top={0}
@@ -517,7 +520,7 @@ const ApplicantList: React.FC<{
                             <Typography
                               variant="caption"
                               component="div"
-                              sx={{ color: "error.main" }}
+                              sx={{ color: 'error.main' }}
                             >
                               Error
                             </Typography>
@@ -533,52 +536,50 @@ const ApplicantList: React.FC<{
         );
       },
     },
-    ...(type === "overview"
+    ...(type === 'overview'
       ? [
-          isArchive
-            ? {
-                field: "unarchive",
-                headerName: "Unarchive",
-                sortable: false,
-                flex: 0.5,
-                renderCell: (param) => {
-                  return (
-                    <ListItemIcon className="cursor-pointer align-middle pl-3">
-                      <Unarchive
-                        onClick={() =>
-                          handleArchive(
-                            param.row.id,
-                            param.row.userApplicantId,
-                            true,
-                          )
-                        }
-                      />
-                    </ListItemIcon>
-                  );
-                },
-              }
-            : {
-                field: "archive",
-                headerName: "Archive",
-                sortable: false,
-                flex: 0.5,
-                renderCell: (param) => {
-                  return (
-                    <ListItemIcon className="cursor-pointer align-middle pl-3">
-                      <Archive
-                        onClick={() =>
-                          handleArchive(
-                            param.row.id,
-                            param.row.userApplicantId,
-                            false,
-                          )
-                        }
-                      />
-                    </ListItemIcon>
-                  );
-                },
-              },
-        ]
+        isArchive
+          ? {
+            field: 'unarchive',
+            headerName: 'Unarchive',
+            sortable: false,
+            flex: 0.5,
+            renderCell: (param) => {
+              return (
+                <ListItemIcon className="cursor-pointer align-middle pl-3">
+                  <Unarchive
+                    onClick={() =>
+                      handleArchive(
+                        param.row.id,
+                        param.row.userApplicantId,
+                        true,
+                      )}
+                  />
+                </ListItemIcon>
+              );
+            },
+          }
+          : {
+            field: 'archive',
+            headerName: 'Archive',
+            sortable: false,
+            flex: 0.5,
+            renderCell: (param) => {
+              return (
+                <ListItemIcon className="cursor-pointer align-middle pl-3">
+                  <Archive
+                    onClick={() =>
+                      handleArchive(
+                        param.row.id,
+                        param.row.userApplicantId,
+                        false,
+                      )}
+                  />
+                </ListItemIcon>
+              );
+            },
+          },
+      ]
       : []),
   ];
 
@@ -596,15 +597,15 @@ const ApplicantList: React.FC<{
             },
           }}
           columns={columns}
-          localeText={{ noRowsLabel: "No applicant found" }}
-          getRowHeight={() => "auto"}
+          localeText={{ noRowsLabel: 'No applicant found' }}
+          getRowHeight={() => 'auto'}
           sx={{
             [`& .${gridClasses.row}`]: {
               py: 2,
             },
             [`& .${gridClasses.cell}`]: {
-              height: "100%",
-              alignSelf: "center",
+              height: '100%',
+              alignSelf: 'center',
             },
           }}
         />

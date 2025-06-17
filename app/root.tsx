@@ -1,12 +1,16 @@
-import type { LinksFunction } from '@remix-run/node';
+import type { LinksFunction, LoaderFunctionArgs } from '@remix-run/node';
 import {
   Links,
   Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLoaderData,
 } from '@remix-run/react';
 
+import { UserProvider } from '~/hooks/useUser';
+import { getCurrentUser } from '~/lib/user/getCurrentUser';
+import type { USER } from '~/types/user';
 import './tailwind.css';
 
 export const links: LinksFunction = () => [
@@ -21,6 +25,11 @@ export const links: LinksFunction = () => [
     href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap',
   },
 ];
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  const user = await getCurrentUser(request);
+  return { user };
+}
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -41,5 +50,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  const { user } = useLoaderData<{ user: USER | null }>();
+
+  return (
+    <UserProvider initialUser={user}>
+      <Outlet />
+    </UserProvider>
+  );
 }

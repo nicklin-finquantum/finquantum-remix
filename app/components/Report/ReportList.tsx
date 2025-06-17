@@ -1,16 +1,25 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useParams, useLocation, Link } from "react-router-dom";
 import {
-  fetchDataList,
-  handleArchiveApiRequest,
-  handleArchiveConfirmation,
-  formatDate,
-  formatTime,
-  sendRequest,
-  checkAdmin,
-  getProductUrl,
-  checkOrgRole,
-} from "../../utils/utils";
+  AccessTime,
+  Archive,
+  Check,
+  Download,
+  ThumbUp,
+  Unarchive,
+} from '@mui/icons-material';
+import InfoIcon from '@mui/icons-material/Info';
+import { Box, IconButton, ListItemIcon, Tooltip } from '@mui/material';
+import type { GridColDef } from '@mui/x-data-grid';
+import { DataGrid, gridClasses } from '@mui/x-data-grid';
+import debounce from 'lodash.debounce';
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams, useLocation, Link } from 'react-router-dom';
+
+import useModal from '~/hooks/useModal';
+import useSearch from '~/hooks/useSearch';
+import { useUser } from '~/hooks/useUser';
+import type { OverviewType } from '~/types/overviewType';
+import type { Product } from '~/types/product';
+import type { REPORT } from '~/types/report';
 import {
   REPORT_DOWNLOAD_API,
   REPORT_ARCHIVE_API,
@@ -23,27 +32,22 @@ import {
   REPORT_LIST_ORG_ARCHIVED_API,
   REPORT_LIST_ALL_ARCHIVED_API,
   REPORT_LIST_ALL_API,
-} from "../../utils/consts";
-import { Product } from "../../types/product";
-import { REPORT } from "../../types/report";
-import useModal from "../../hooks/useModal";
-import WebsocketService from "../Websockets/WebsocketService";
-import { SortConfig, requestSort, sortArray } from "../../utils/tableSorting";
-import { Box, IconButton, ListItemIcon, Tooltip } from "@mui/material";
-import { DataGrid, gridClasses, GridColDef } from "@mui/x-data-grid";
-import InfoIcon from "@mui/icons-material/Info";
+} from '~/utils/consts';
+import { requestSort, sortArray } from '~/utils/tableSorting';
+import type { SortConfig } from '~/utils/tableSorting';
 import {
-  AccessTime,
-  Archive,
-  Check,
-  Download,
-  ThumbUp,
-  Unarchive,
-} from "@mui/icons-material";
-import { OverviewType } from "../../types/overviewType";
-import useSearch from "../../hooks/useSearch";
-import { useUser } from "../../hooks/useUser";
-import debounce from "lodash.debounce";
+  fetchDataList,
+  handleArchiveApiRequest,
+  handleArchiveConfirmation,
+  formatDate,
+  formatTime,
+  sendRequest,
+  isAdmin,
+  getProductUrl,
+  isOrgAdmin,
+} from '~/utils/utils';
+
+import WebsocketService from '~/Websockets/WebsocketService';
 
 const ReportList: React.FC<{
   product: Product;
@@ -53,7 +57,7 @@ const ReportList: React.FC<{
   getAll?: boolean;
 }> = ({
   product,
-  type = "overview",
+  type = 'overview',
   isArchive = false,
   download = false,
   getAll = false,
@@ -63,8 +67,8 @@ const ReportList: React.FC<{
   const { hash } = useLocation();
 
   const { user } = useUser();
-  const isAdmin = checkAdmin(user);
-  const isOrgAdmin = checkOrgRole(user);
+  const isAdmin = isAdmin(user);
+  const isOrgAdmin = isOrgAdmin(user);
   const location = useLocation();
 
   const websocketServicesRef = useRef([]);
@@ -92,10 +96,10 @@ const ReportList: React.FC<{
     setSearchValue,
     triggerSearch,
   } = useSearch<REPORT>(
-    ["reportId", "userApplicationId"],
+    ['reportId', 'userApplicationId'],
     download
-      ? "Enter File Number (example: 12334456)"
-      : "Enter Report No (example: 1)",
+      ? 'Enter File Number (example: 12334456)'
+      : 'Enter Report No (example: 1)',
   );
 
   useEffect(() => {
@@ -103,27 +107,27 @@ const ReportList: React.FC<{
       try {
         const data = await fetchDataList(
           isArchive
-            ? getAll && type === "admin" && isAdmin
+            ? getAll && type === 'admin' && isAdmin
               ? REPORT_LIST_ALL_ARCHIVED_API
               : isOrgAdmin
-              ? REPORT_LIST_ORG_ARCHIVED_API
-              : REPORT_LIST_ARCHIVED_API
-            : getAll && type === "admin" && isAdmin
-            ? REPORT_LIST_ALL_API
-            : isOrgAdmin
-            ? REPORT_LIST_ORG_ALL_API
-            : REPORT_LIST_API,
+                ? REPORT_LIST_ORG_ARCHIVED_API
+                : REPORT_LIST_ARCHIVED_API
+            : getAll && type === 'admin' && isAdmin
+              ? REPORT_LIST_ALL_API
+              : isOrgAdmin
+                ? REPORT_LIST_ORG_ALL_API
+                : REPORT_LIST_API,
           { product },
         );
         const newDataList = data.reportList.map((item: REPORT) => ({
           ...item,
           statusText: item.status.text,
           creationTime:
-            formatDate(item.createdAt) + " " + formatTime(item.createdAt),
+            formatDate(item.createdAt) + ' ' + formatTime(item.createdAt),
         }));
         setFullList(newDataList);
       } catch (error) {
-        console.error("Failed to fetch report list:", error);
+        console.error('Failed to fetch report list:', error);
       }
     };
     getDataList();
@@ -131,7 +135,7 @@ const ReportList: React.FC<{
     /*
       const webSocketService = new WebsocketService();
       webSocketService.connectReportSocket(, handleReportUpdate);
-  
+
       return () => {
         if (WebsocketService.reportSocket) {
           WebsocketService.reportSocket.close();
@@ -152,8 +156,8 @@ const ReportList: React.FC<{
   }, [fullList]);
 
   useEffect(() => {
-    const query = new URLSearchParams(hash.split("?")[1]);
-    const reportName = query.get("s");
+    const query = new URLSearchParams(hash.split('?')[1]);
+    const reportName = query.get('s');
     if (reportName) {
       setSearchValue(reportName);
       triggerSearch(reportName);
@@ -194,11 +198,11 @@ const ReportList: React.FC<{
 
         websocketServicesRef.current = newActiveConnections;
         console.log(
-          "Count of active report WebSocket connections",
+          'Count of active report WebSocket connections',
           websocketServicesRef.current.length,
         );
       } catch (e) {
-        console.error("Error connecting to websocket:", e);
+        console.error('Error connecting to websocket:', e);
       }
     };
 
@@ -212,11 +216,11 @@ const ReportList: React.FC<{
           websocketService.closeReportSocket();
         });
         console.log(
-          "Closing of report ws --- ",
+          'Closing of report ws --- ',
           websocketServicesRef.current.length,
         );
       } catch (e) {
-        console.error("Error closing websocket connections:", e);
+        console.error('Error closing websocket connections:', e);
       }
     };
   }, [debouncedList]);
@@ -224,9 +228,9 @@ const ReportList: React.FC<{
   /*
       const handleReportUpdate = (message) => {
         //console.log('WebSocket message received:', message);
-    
+
         let reportId = message.reportId;
-    
+
         try {
           const updatedList = filteredList.map((report: REPORT) => {
             if (report.status) {
@@ -237,7 +241,7 @@ const ReportList: React.FC<{
             }
             return report;
           });
-    
+
           setFullList(updatedList);
         } catch (e) {
           console.error("Error updating report status:", e);
@@ -247,8 +251,8 @@ const ReportList: React.FC<{
 
   const handleReportUpdate = (message) => {
     try {
-      let reportId = message.reportId;
-      console.log("WebSocket message received:", message);
+      const reportId = message.reportId;
+      console.log('WebSocket message received:', message);
 
       const updatedList = debouncedList.map((report: REPORT) => {
         if (report.status) {
@@ -276,14 +280,14 @@ const ReportList: React.FC<{
         }),
       );
     } catch (e) {
-      console.error("Error updating report status:", e);
+      console.error('Error updating report status:', e);
     }
   };
   const handleDownload = async (id: string, name: string, orgId: string) => {
     try {
       const response = await sendRequest(
         REPORT_DOWNLOAD_API,
-        "POST",
+        'POST',
         {
           product,
           id,
@@ -296,22 +300,22 @@ const ReportList: React.FC<{
       if (response.status === 200) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
+        const a = document.createElement('a');
         a.href = url;
-        a.download = name + ".pdf";
+        a.download = name + '.pdf';
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
-        setMessage("Download Initiated. Please check your Downloads folder.");
+        setMessage('Download Initiated. Please check your Downloads folder.');
       } else {
         throw new Error(response.message);
       }
     } catch (error) {
       setMessage(
         <span>
-          {"Report Download Failed: "}
-          {error instanceof Error ? error.message : "Internal Error"}
+          {'Report Download Failed: '}
+          {error instanceof Error ? error.message : 'Internal Error'}
         </span>,
       );
     } finally {
@@ -324,7 +328,7 @@ const ReportList: React.FC<{
   const handleValidate = (id: string, name: string) => {
     setMessage(
       <Box>
-        Are you sure you want to validate report{" "}
+        Are you sure you want to validate report{' '}
         <span className="text-blue-500">{name}</span>?
       </Box>,
     );
@@ -337,7 +341,7 @@ const ReportList: React.FC<{
     try {
       const response = await sendRequest(
         REPORT_VALIDATE_API,
-        "POST",
+        'POST',
         {
           product: product,
           id: id,
@@ -353,8 +357,8 @@ const ReportList: React.FC<{
     } catch (error) {
       setMessage(
         <span>
-          {"Report Validate Failed: "}
-          {error instanceof Error ? error.message : "Internal Error"}
+          {'Report Validate Failed: '}
+          {error instanceof Error ? error.message : 'Internal Error'}
         </span>,
       );
       setOkFunction(handleOk);
@@ -383,7 +387,7 @@ const ReportList: React.FC<{
       unarchive ? REPORT_UNARCHIVE_API : REPORT_ARCHIVE_API,
       { product, id },
       unarchive,
-      "Report",
+      'Report',
       setMessage,
       setOkFunction,
       setCancelFunction,
@@ -400,18 +404,18 @@ const ReportList: React.FC<{
   };
 
   const columns: GridColDef[] = [
-    { field: "reportId", headerName: "Report", flex: 1 },
-    { field: "userApplicationId", headerName: "File No.", flex: 1 },
-    { field: "reportType", headerName: "Type", flex: 1 },
-    { field: "creationTime", headerName: "Creation Time", flex: 1 },
+    { field: 'reportId', headerName: 'Report', flex: 1 },
+    { field: 'userApplicationId', headerName: 'File No.', flex: 1 },
+    { field: 'reportType', headerName: 'Type', flex: 1 },
+    { field: 'creationTime', headerName: 'Creation Time', flex: 1 },
     {
-      field: "statusText",
-      headerName: "Report Status",
+      field: 'statusText',
+      headerName: 'Report Status',
       flex: 1,
       renderCell: (params) => {
         let tooltipTitle = <></>;
 
-        if (params.value.toLowerCase() === "waiting for validation") {
+        if (params.value.toLowerCase() === 'waiting for validation') {
           tooltipTitle = (
             <>
               We are working hard to cross-check the data. Please check back
@@ -419,11 +423,11 @@ const ReportList: React.FC<{
               report is validated and completed.
             </>
           );
-        } else if (params.value.toLowerCase() === "report generation failed") {
+        } else if (params.value.toLowerCase() === 'report generation failed') {
           tooltipTitle = (
             <span>
               Sorry, report generation failed. Please retry to generate the
-              report later. If the issue persists, please{" "}
+              report later. If the issue persists, please{' '}
               <Link
                 className="text-sky-400 underline"
                 to="mailto: customersupport@finquantuminc.com"
@@ -438,10 +442,10 @@ const ReportList: React.FC<{
         }
 
         return (
-          <Box style={{ display: "flex", alignItems: "center" }}>
+          <Box style={{ display: 'flex', alignItems: 'center' }}>
             <span>{params.value}</span>
-            {(params.value.toLowerCase() === "waiting for validation" ||
-              params.value.toLowerCase() === "report generation failed") && (
+            {(params.value.toLowerCase() === 'waiting for validation' ||
+              params.value.toLowerCase() === 'report generation failed') && (
               <Tooltip className="h-fit" title={tooltipTitle}>
                 <IconButton>
                   <InfoIcon />
@@ -454,98 +458,95 @@ const ReportList: React.FC<{
     },
     ...(download
       ? [
-          {
-            field: "download",
-            headerName: "Download",
-            sortable: false,
-            renderCell: (param) => (
-              <ListItemIcon className="cursor-pointer align-middle pl-3">
-                {(param.row.status.validated ||
-                  (isAdmin && type === "admin")) ? (
+        {
+          field: 'download',
+          headerName: 'Download',
+          sortable: false,
+          renderCell: (param) => (
+            <ListItemIcon className="cursor-pointer align-middle pl-3">
+              {(param.row.status.validated ||
+                  (isAdmin && type === 'admin')) ? (
                   <Download
-                    onClick={() => {
+                      onClick={() => {
                       handleDownload(
                         param.row.id,
                         param.row.reportId,
                         param.row.applicationId.orgId,
                       );
                     }}
-                  />
+                    />
                 ) : (
                   <AccessTime />
                 )}
-              </ListItemIcon>
-            ),
-          },
-        ]
+            </ListItemIcon>
+          ),
+        },
+      ]
       : []),
-    ...(type === "admin"
+    ...(type === 'admin'
       ? [
-          {
-            field: "validate",
-            headerName: "Validate",
+        {
+          field: 'validate',
+          headerName: 'Validate',
+          sortable: false,
+          renderCell: (param) => {
+            return (
+              <ListItemIcon className="cursor-pointer align-middle pl-3">
+                {param.row.status.finished ? (
+                  param.row.status.validated ? (
+                    <ThumbUp />
+                  ) : (
+                    <Check
+                      onClick={() =>
+                        handleValidate(
+                          param.row.id,
+                          param.row.userApplicationName,
+                        )}
+                    />
+                  )
+                ) : (
+                  <></>
+                )}
+              </ListItemIcon>
+            );
+          },
+        },
+      ]
+      : []),
+    ...(type === 'overview'
+      ? [
+        isArchive
+          ? {
+            field: 'unarchive',
+            headerName: 'Unarchive',
             sortable: false,
             renderCell: (param) => {
               return (
                 <ListItemIcon className="cursor-pointer align-middle pl-3">
-                  {param.row.status.finished ? (
-                    param.row.status.validated ? (
-                      <ThumbUp />
-                    ) : (
-                      <Check
-                        onClick={() =>
-                          handleValidate(
-                            param.row.id,
-                            param.row.userApplicationName,
-                          )
-                        }
-                      />
-                    )
-                  ) : (
-                    <></>
-                  )}
+                  <Unarchive
+                    onClick={() =>
+                      handleArchive(param.row.id, param.row.reportId, true)}
+                  />
+                </ListItemIcon>
+              );
+            },
+          }
+          : {
+            field: 'archive',
+            headerName: 'Archive',
+            sortable: false,
+            renderCell: (param) => {
+              return (
+                <ListItemIcon className="cursor-pointer align-middle pl-3">
+                  <Archive
+                    onClick={() =>
+                      handleArchive(param.row.id, param.row.reportId, false)}
+                  />
                 </ListItemIcon>
               );
             },
           },
-        ]
-      : []),
-    ...(type === "overview"
-      ? [
-          isArchive
-            ? {
-                field: "unarchive",
-                headerName: "Unarchive",
-                sortable: false,
-                renderCell: (param) => {
-                  return (
-                    <ListItemIcon className="cursor-pointer align-middle pl-3">
-                      <Unarchive
-                        onClick={() =>
-                          handleArchive(param.row.id, param.row.reportId, true)
-                        }
-                      />
-                    </ListItemIcon>
-                  );
-                },
-              }
-            : {
-                field: "archive",
-                headerName: "Archive",
-                sortable: false,
-                renderCell: (param) => {
-                  return (
-                    <ListItemIcon className="cursor-pointer align-middle pl-3">
-                      <Archive
-                        onClick={() =>
-                          handleArchive(param.row.id, param.row.reportId, false)
-                        }
-                      />
-                    </ListItemIcon>
-                  );
-                },
-              },
-        ]
+      ]
       : []),
   ];
 
@@ -563,12 +564,12 @@ const ReportList: React.FC<{
               paginationModel: { pageSize: 25, page: 0 },
             },
           }}
-          localeText={{ noRowsLabel: "No report found" }}
-          getRowHeight={() => "auto"}
+          localeText={{ noRowsLabel: 'No report found' }}
+          getRowHeight={() => 'auto'}
           sx={{
             [`& .${gridClasses.cell}`]: {
               py: 2,
-              alignSelf: "center",
+              alignSelf: 'center',
             },
           }}
         />

@@ -1,9 +1,6 @@
-import dotenv from 'dotenv';
 import mongoose, { type InferSchemaType, type Types } from 'mongoose';
 
-import { OrgRole } from './OrganizationModel';
-
-dotenv.config();
+import { OrgRole } from '~/models/OrganizationModel';
 
 // Enum for user roles
 export enum UserRole {

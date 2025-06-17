@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { APPLICANT_FORM } from "../types/applicant";
-import { StatusType } from "../types/statusType";
-import { Box } from "@mui/material";
+import { Box } from '@mui/material';
+import { useState } from 'react';
+
+import type { APPLICANT_FORM } from '~/types/applicant';
+import type { StatusType } from '~/types/statusType';
 
 export interface ApplicantStatus {
   userApplicantId: StatusType;
@@ -34,7 +35,7 @@ const useApplicantList = (
 ) => {
   const initialApplicantList = [
     {
-      userApplicantId: "",
+      userApplicantId: '',
       fileInputs: {
         bankStatements: [],
         taxReturns: [],
@@ -51,20 +52,20 @@ const useApplicantList = (
   const [deleteApplicantList, setDeleteApplicantList] = useState<string[]>([]);
 
   const defaultApplicantValidationStatus: ApplicantValidationStatus = {
-    userApplicationIdStatus: "default",
+    userApplicationIdStatus: 'default',
     applicantStatus: [
       {
-        userApplicantId: "default",
-        fileInputs: "default",
+        userApplicantId: 'default',
+        fileInputs: 'default',
       },
     ],
   };
   const defaultApplicantValidationMessage: ApplicantValidationMessage = {
-    userApplicationIdMessage: "",
+    userApplicationIdMessage: '',
     applicantMessage: [
       {
-        userApplicantId: "",
-        fileInputs: "",
+        userApplicantId: '',
+        fileInputs: '',
       },
     ],
   };
@@ -78,13 +79,13 @@ const useApplicantList = (
   const addApplicant = () => {
     if (applicantList.length >= 5) {
       // Show an error message or handle max applicantList reached logic
-      alert("Maximum number of applicantList reached.");
+      alert('Maximum number of applicantList reached.');
       return;
     }
     setApplicantList((prevApplicantList) => [
       ...prevApplicantList,
       {
-        userApplicantId: "",
+        userApplicantId: '',
         fileInputs: {
           bankStatements: [],
           taxReturns: [],
@@ -99,7 +100,7 @@ const useApplicantList = (
       ...prevStatus,
       applicantStatus: [
         ...prevStatus.applicantStatus,
-        { userApplicantId: "default", fileInputs: "default" },
+        { userApplicantId: 'default', fileInputs: 'default' },
       ],
     }));
 
@@ -107,7 +108,7 @@ const useApplicantList = (
       ...prevMessages,
       applicantMessage: [
         ...prevMessages.applicantMessage,
-        { userApplicantId: "", fileInputs: "" },
+        { userApplicantId: '', fileInputs: '' },
       ],
     }));
   };
@@ -116,7 +117,7 @@ const useApplicantList = (
     if (userApplicantId) {
       setMessage(
         <Box>
-          Are you sure you want to remove applicant{" "}
+          Are you sure you want to remove applicant{' '}
           <span className="text-blue-500">{userApplicantId}</span>?
         </Box>,
       );

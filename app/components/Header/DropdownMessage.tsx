@@ -1,18 +1,17 @@
-import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 
-import UserOne from "../../images/user/user-01.png";
-import UserTwo from "../../images/user/user-02.png";
-import UserThree from "../../images/user/user-03.png";
-import UserFour from "../../images/user/user-04.png";
-import { Box, Typography } from "@mui/material";
+import UserOne from '~/public/images/user/user-01.png';
+import UserTwo from '~/public/images/user/user-02.png';
+import UserThree from '~/public/images/user/user-03.png';
+import UserFour from '~/public/images/user/user-04.png';
 
 const DropdownMessage = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notifying, setNotifying] = useState(true);
 
-  const trigger = useRef<any>(null);
-  const dropdown = useRef<any>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const dropdown = useRef<HTMLDivElement>(null);
 
   // close on click outside
   useEffect(() => {
@@ -20,14 +19,14 @@ const DropdownMessage = () => {
       if (!dropdown.current) return;
       if (
         !dropdownOpen ||
-        dropdown.current.contains(target) ||
-        trigger.current.contains(target)
+        dropdown.current.contains(target as Node) ||
+        trigger.current?.contains(target as Node)
       )
         return;
       setDropdownOpen(false);
     };
-    document.addEventListener("click", clickHandler);
-    return () => document.removeEventListener("click", clickHandler);
+    document.addEventListener('click', clickHandler);
+    return () => document.removeEventListener('click', clickHandler);
   });
 
   // close if the esc key is pressed
@@ -36,24 +35,24 @@ const DropdownMessage = () => {
       if (!dropdownOpen || keyCode !== 27) return;
       setDropdownOpen(false);
     };
-    document.addEventListener("keydown", keyHandler);
-    return () => document.removeEventListener("keydown", keyHandler);
+    document.addEventListener('keydown', keyHandler);
+    return () => document.removeEventListener('keydown', keyHandler);
   });
 
   return (
     <li className="relative">
-      <Link
+      <button
         ref={trigger}
         onClick={() => {
           setNotifying(false);
           setDropdownOpen(!dropdownOpen);
         }}
         className="relative flex h-8.5 w-8.5 items-center justify-center rounded-full border-[0.5px] border-stroke bg-gray hover:text-primary dark:border-strokedark dark:bg-meta-4 dark:text-white"
-        to="#"
+        aria-label="Toggle messages"
       >
         <span
           className={`absolute -top-0.5 -right-0.5 z-1 h-2 w-2 rounded-full bg-meta-1 ${
-            notifying === false ? "hidden" : "inline"
+            notifying === false ? 'hidden' : 'inline'
           }`}
         >
           <span className="absolute -z-1 inline-flex h-full w-full animate-ping rounded-full bg-meta-1 opacity-75"></span>
@@ -66,6 +65,7 @@ const DropdownMessage = () => {
           viewBox="0 0 18 18"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
         >
           <path
             d="M10.9688 1.57495H7.03135C3.43135 1.57495 0.506348 4.41558 0.506348 7.90308C0.506348 11.3906 2.75635 13.8375 8.26885 16.3125C8.40947 16.3687 8.52197 16.3968 8.6626 16.3968C8.85947 16.3968 9.02822 16.3406 9.19697 16.2281C9.47822 16.0593 9.64697 15.75 9.64697 15.4125V14.2031H10.9688C14.5688 14.2031 17.522 11.3625 17.522 7.87495C17.522 4.38745 14.5688 1.57495 10.9688 1.57495ZM10.9688 12.9937H9.3376C8.80322 12.9937 8.35322 13.4437 8.35322 13.9781V15.0187C3.6001 12.825 1.74385 10.8 1.74385 7.9312C1.74385 5.14683 4.10635 2.8687 7.03135 2.8687H10.9688C13.8657 2.8687 16.2563 5.14683 16.2563 7.9312C16.2563 10.7156 13.8657 12.9937 10.9688 12.9937Z"
@@ -84,20 +84,20 @@ const DropdownMessage = () => {
             fill=""
           />
         </svg>
-      </Link>
+      </button>
 
-      {/* <!-- Dropdown Start --> */}
-      <Box
+      {/* Dropdown Start */}
+      <div
         ref={dropdown}
         onFocus={() => setDropdownOpen(true)}
         onBlur={() => setDropdownOpen(false)}
         className={`absolute -right-16 mt-2.5 flex h-90 w-75 flex-col rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark sm:right-0 sm:w-80 ${
-          dropdownOpen === true ? "block" : "hidden"
+          dropdownOpen === true ? 'block' : 'hidden'
         }`}
       >
-        <Box className="px-4.5 py-3">
+        <div className="px-4.5 py-3">
           <h5 className="text-sm font-medium text-bodydark2">Messages</h5>
-        </Box>
+        </div>
 
         <ul className="flex h-auto flex-col overflow-y-auto">
           <li>
@@ -105,19 +105,17 @@ const DropdownMessage = () => {
               className="flex gap-4.5 border-t border-stroke px-4.5 py-3 hover:bg-gray-2 dark:border-strokedark dark:hover:bg-meta-4"
               to="/messages"
             >
-              <Box className="h-12.5 w-12.5 rounded-full">
+              <div className="h-12.5 w-12.5 rounded-full">
                 <img src={UserTwo} alt="User" />
-              </Box>
+              </div>
 
-              <Box>
+              <div>
                 <h6 className="text-sm font-medium text-black dark:text-white">
                   Mariya Desoja
                 </h6>
-                <Typography className="text-sm">
-                  I like your confidence 💪
-                </Typography>
-                <Typography className="text-xs">2min ago</Typography>
-              </Box>
+                <p className="text-sm">I like your confidence 💪</p>
+                <p className="text-xs">2min ago</p>
+              </div>
             </Link>
           </li>
           <li>
@@ -125,19 +123,17 @@ const DropdownMessage = () => {
               className="flex gap-4.5 border-t border-stroke px-4.5 py-3 hover:bg-gray-2 dark:border-strokedark dark:hover:bg-meta-4"
               to="/messages"
             >
-              <Box className="h-12.5 w-12.5 rounded-full">
+              <div className="h-12.5 w-12.5 rounded-full">
                 <img src={UserOne} alt="User" />
-              </Box>
+              </div>
 
-              <Box>
+              <div>
                 <h6 className="text-sm font-medium text-black dark:text-white">
                   Robert Jhon
                 </h6>
-                <Typography className="text-sm">
-                  Can you share your offer?
-                </Typography>
-                <Typography className="text-xs">10min ago</Typography>
-              </Box>
+                <p className="text-sm">Can you share your offer?</p>
+                <p className="text-xs">10min ago</p>
+              </div>
             </Link>
           </li>
           <li>
@@ -145,19 +141,17 @@ const DropdownMessage = () => {
               className="flex gap-4.5 border-t border-stroke px-4.5 py-3 hover:bg-gray-2 dark:border-strokedark dark:hover:bg-meta-4"
               to="/messages"
             >
-              <Box className="h-12.5 w-12.5 rounded-full">
+              <div className="h-12.5 w-12.5 rounded-full">
                 <img src={UserThree} alt="User" />
-              </Box>
+              </div>
 
-              <Box>
+              <div>
                 <h6 className="text-sm font-medium text-black dark:text-white">
                   Henry Dholi
                 </h6>
-                <Typography className="text-sm">
-                  I cam across your profile and...
-                </Typography>
-                <Typography className="text-xs">1day ago</Typography>
-              </Box>
+                <p className="text-sm">I cam across your profile and...</p>
+                <p className="text-xs">1day ago</p>
+              </div>
             </Link>
           </li>
           <li>
@@ -165,19 +159,17 @@ const DropdownMessage = () => {
               className="flex gap-4.5 border-t border-stroke px-4.5 py-3 hover:bg-gray-2 dark:border-strokedark dark:hover:bg-meta-4"
               to="/messages"
             >
-              <Box className="h-12.5 w-12.5 rounded-full">
+              <div className="h-12.5 w-12.5 rounded-full">
                 <img src={UserFour} alt="User" />
-              </Box>
+              </div>
 
-              <Box>
+              <div>
                 <h6 className="text-sm font-medium text-black dark:text-white">
                   Cody Fisher
                 </h6>
-                <Typography className="text-sm">
-                  I’m waiting for you response!
-                </Typography>
-                <Typography className="text-xs">5days ago</Typography>
-              </Box>
+                <p className="text-sm">I'm waiting for you response!</p>
+                <p className="text-xs">5days ago</p>
+              </div>
             </Link>
           </li>
           <li>
@@ -185,24 +177,22 @@ const DropdownMessage = () => {
               className="flex gap-4.5 border-t border-stroke px-4.5 py-3 hover:bg-gray-2 dark:border-strokedark dark:hover:bg-meta-4"
               to="/messages"
             >
-              <Box className="h-12.5 w-12.5 rounded-full">
+              <div className="h-12.5 w-12.5 rounded-full">
                 <img src={UserTwo} alt="User" />
-              </Box>
+              </div>
 
-              <Box>
+              <div>
                 <h6 className="text-sm font-medium text-black dark:text-white">
                   Mariya Desoja
                 </h6>
-                <Typography className="text-sm">
-                  I like your confidence 💪
-                </Typography>
-                <Typography className="text-xs">2min ago</Typography>
-              </Box>
+                <p className="text-sm">I like your confidence 💪</p>
+                <p className="text-xs">2min ago</p>
+              </div>
             </Link>
           </li>
         </ul>
-      </Box>
-      {/* <!-- Dropdown End --> */}
+      </div>
+      {/* Dropdown End */}
     </li>
   );
 };

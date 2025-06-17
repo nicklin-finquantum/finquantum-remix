@@ -3,7 +3,7 @@
  * @param email - The email string to validate
  * @returns boolean - true if email is valid, false otherwise
  */
-export function validateEmail(email: string): boolean {
+export const validateEmail = (email: string): boolean => {
   if (!email || typeof email !== 'string') {
     return false;
   }
@@ -30,80 +30,7 @@ export function validateEmail(email: string): boolean {
   }
 
   return emailRegex.test(trimmedEmail);
-}
-
-/**
- * Validates password strength with customizable criteria
- * @param password - The password string to validate
- * @param options - Optional configuration for password requirements
- * @returns boolean - true if password meets requirements, false otherwise
- */
-export function validatePassword(
-  password: string,
-  options: {
-    minLength?: number;
-    requireUppercase?: boolean;
-    requireLowercase?: boolean;
-    requireNumbers?: boolean;
-    requireSpecialChars?: boolean;
-    maxLength?: number;
-  } = {},
-): boolean {
-  if (!password || typeof password !== 'string') {
-    return false;
-  }
-
-  const {
-    minLength = 8,
-    requireUppercase = false,
-    requireLowercase = false,
-    requireNumbers = false,
-    requireSpecialChars = false,
-    maxLength = 128,
-  } = options;
-
-  // Length check
-  if (password.length < minLength || password.length > maxLength) {
-    return false;
-  }
-
-  // Uppercase check
-  if (requireUppercase && !/[A-Z]/.test(password)) {
-    return false;
-  }
-
-  // Lowercase check
-  if (requireLowercase && !/[a-z]/.test(password)) {
-    return false;
-  }
-
-  // Numbers check
-  if (requireNumbers && !/\d/.test(password)) {
-    return false;
-  }
-
-  // Special characters check
-  if (requireSpecialChars && !/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]/.test(password)) {
-    return false;
-  }
-
-  return true;
-}
-
-/**
- * More strict password validation with common requirements
- * @param password - The password string to validate
- * @returns boolean - true if password meets strict requirements
- */
-export function validateStrongPassword(password: string): boolean {
-  return validatePassword(password, {
-    minLength: 8,
-    requireUppercase: true,
-    requireLowercase: true,
-    requireNumbers: true,
-    requireSpecialChars: true,
-  });
-}
+};
 
 /**
  * Get detailed password validation errors
@@ -111,7 +38,7 @@ export function validateStrongPassword(password: string): boolean {
  * @param options - Optional configuration for password requirements
  * @returns array of error messages
  */
-export function getPasswordValidationErrors(
+export const getPasswordValidationErrors = (
   password: string,
   options: {
     minLength?: number;
@@ -121,7 +48,7 @@ export function getPasswordValidationErrors(
     requireSpecialChars?: boolean;
     maxLength?: number;
   } = {},
-): string[] {
+): string[] => {
   const errors: string[] = [];
 
   if (!password || typeof password !== 'string') {
@@ -158,19 +85,19 @@ export function getPasswordValidationErrors(
     errors.push('Password must contain at least one number');
   }
 
-  if (requireSpecialChars && !/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+  if (requireSpecialChars && !/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
     errors.push('Password must contain at least one special character');
   }
 
   return errors;
-}
+};
 
 /**
  * Get detailed email validation error
  * @param email - The email string to validate
  * @returns string error message or null if valid
  */
-export function getEmailValidationError(email: string): string | null {
+export const getEmailValidationError = (email: string): string | null => {
   if (!email || typeof email !== 'string') {
     return 'Email is required';
   }
@@ -200,4 +127,4 @@ export function getEmailValidationError(email: string): string | null {
   }
 
   return null;
-}
+};

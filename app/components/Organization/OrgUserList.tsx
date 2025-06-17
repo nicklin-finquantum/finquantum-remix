@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from "react";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { Link, useLocation } from "react-router-dom";
-import { Box, Typography } from "@mui/material";
+import { Height, VerticalAlignCenter } from '@mui/icons-material';
+import { Box, Typography } from '@mui/material';
+import type { GridColDef } from '@mui/x-data-grid';
+import { DataGrid } from '@mui/x-data-grid';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 
-import { ORG_PATH, ORG_USER_LIST_API, USER_PATH } from "../../utils/consts";
-import { sendRequest } from "../../utils/utils";
-import { USER } from "../../types/user";
-import { Height, VerticalAlignCenter } from "@mui/icons-material";
+import type { USER } from '~/types/user';
+import { ORG_PATH, ORG_USER_LIST_API, USER_PATH } from '~/utils/consts';
+import { sendRequest } from '~/utils/utils';
 
 const OrgUserList: React.FC = () => {
   const [rows, setRows] = useState<USER[]>([]);
@@ -15,7 +16,7 @@ const OrgUserList: React.FC = () => {
   useEffect(() => {
     const getUserOrgUserList = async () => {
       try {
-        const response = await sendRequest(ORG_USER_LIST_API, "GET", {}, true);
+        const response = await sendRequest(ORG_USER_LIST_API, 'GET', {}, true);
         if (
           response.status === 200 &&
           response.data &&
@@ -31,7 +32,7 @@ const OrgUserList: React.FC = () => {
           setRows(newUserList);
         }
       } catch (error) {
-        console.error("Failed to fetch organization user list:", error);
+        console.error('Failed to fetch organization user list:', error);
       }
     };
     getUserOrgUserList();
@@ -39,12 +40,12 @@ const OrgUserList: React.FC = () => {
 
   const columns: GridColDef[] = [
     {
-      field: "name",
-      headerName: "Name",
+      field: 'name',
+      headerName: 'Name',
       flex: 1,
     },
-    { field: "role", headerName: "Role", flex: 1 },
-    { field: "email", headerName: "Email", flex: 1 },
+    { field: 'role', headerName: 'Role', flex: 1 },
+    { field: 'email', headerName: 'Email', flex: 1 },
   ];
 
   return (
@@ -58,7 +59,7 @@ const OrgUserList: React.FC = () => {
           },
         }}
         columns={columns}
-        localeText={{ noRowsLabel: "No Users found" }}
+        localeText={{ noRowsLabel: 'No Users found' }}
         autoHeight
       />
     </Box>

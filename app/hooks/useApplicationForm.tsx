@@ -1,8 +1,13 @@
 // src/hooks/useApplicationForm.ts
 
-import { useState, useEffect } from "react";
-import { getProductUrl, inputValidation, sendRequest } from "../utils/utils";
-import { useSnackbar } from "../context/SnackbarContext";
+import { Box } from '@mui/material';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+
+import type { APPLICANT } from '~/types/applicant';
+import type { APPLICATION, APPLICATION_FORM } from '~/types/application';
+import type { FILE_INPUT } from '~/types/file';
+import type { Product } from '~/types/product';
 import {
   APPLICATION_CREATE_API,
   APPLICATION_EDIT_API,
@@ -13,23 +18,21 @@ import {
   ADD_REPORT_PATH,
   APPLICATION_GET_API,
   APPLICATION_ROLLBACK_API,
-} from "../utils/consts";
-import { Product } from "../types/product";
-import useApplicantList from "./useApplicantList";
-import { APPLICATION, APPLICATION_FORM } from "../types/application";
-import { APPLICANT } from "../types/applicant";
-import { FILE_INPUT } from "../types/file";
-import { Box } from "@mui/material";
-import useModal from "./useModal";
-import { useSearchParams } from "react-router-dom";
+} from '~/utils/consts';
+import { getProductUrl, inputValidation, sendRequest } from '~/utils/utils';
+
+import useApplicantList from './useApplicantList';
+import useModal from './useModal';
+
+import { useSnackbar } from '~/context/SnackbarContext';
 
 const useApplicationForm = (edit: boolean, product: Product) => {
   const initialFormState = edit
     ? null
     : {
-        userApplicationId: "",
-        id: "",
-      };
+      userApplicationId: '',
+      id: '',
+    };
   const [applicationInfo, setApplicationInfo] =
     useState<APPLICATION_FORM>(initialFormState);
 
@@ -74,13 +77,13 @@ const useApplicationForm = (edit: boolean, product: Product) => {
 
   const [searchParams] = useSearchParams();
 
-  const applicationId = searchParams.get("applicationId");
+  const applicationId = searchParams.get('applicationId');
 
   useEffect(() => {
     const getApplicationList = async () => {
       const response = await sendRequest(
         APPLICATION_LIST_API,
-        "GET",
+        'GET',
         {
           product: product,
         },
@@ -108,7 +111,7 @@ const useApplicationForm = (edit: boolean, product: Product) => {
     const getApplicantList = async () => {
       const response = await sendRequest(
         APPLICANT_LIST_BY_APPLICATION_API,
-        "GET",
+        'GET',
         {
           product: product,
           applicationId: applicationInfo.id,
@@ -142,7 +145,7 @@ const useApplicationForm = (edit: boolean, product: Product) => {
     const getApplication = async () => {
       const response = await sendRequest(
         APPLICATION_GET_API,
-        "GET",
+        'GET',
         {
           product: product,
           id: applicationId,
@@ -177,7 +180,7 @@ const useApplicationForm = (edit: boolean, product: Product) => {
   ) => {
     // Only validate on save
     validateAndSetField(
-      "fileInputs",
+      'fileInputs',
       `File ID ${index + 1}`,
       null,
       index,
@@ -198,27 +201,27 @@ const useApplicationForm = (edit: boolean, product: Product) => {
     onlyOnSave?: boolean,
   ) => {
     switch (name) {
-      case "userApplicationId":
+      case 'userApplicationId':
         if (!value) {
-          return `File number is required`;
+          return 'File number is required';
         }
-        if (typeof value === "string" && value.length > 30) {
-          return `File number cannot be longer than 30 characters`;
+        if (typeof value === 'string' && value.length > 30) {
+          return 'File number cannot be longer than 30 characters';
         }
         if (onlyOnSave && applicantList.length <= 0) {
-          return `At least one applicant is required`;
+          return 'At least one applicant is required';
         }
         if (onlyOnSave) {
           const inputCheck = inputValidation(value);
           if (!inputCheck.isValid) return inputCheck.errorMessage;
         }
-        return "";
-      case "userApplicantId":
+        return '';
+      case 'userApplicantId':
         if (onlyOnSave && !value) {
-          return "Applicant ID is required";
+          return 'Applicant ID is required';
         }
-        if (typeof value === "string" && value.length > 30) {
-          return `Applicant ID cannot be longer than 30 characters`;
+        if (typeof value === 'string' && value.length > 30) {
+          return 'Applicant ID cannot be longer than 30 characters';
         }
         if (
           onlyOnSave &&
@@ -227,23 +230,23 @@ const useApplicationForm = (edit: boolean, product: Product) => {
               applicant.userApplicantId === value && idx !== index,
           )
         ) {
-          return "Applicant ID must be unique";
+          return 'Applicant ID must be unique';
         }
         if (onlyOnSave) {
           const inputCheck = inputValidation(value);
           if (!inputCheck.isValid) return inputCheck.errorMessage;
         }
-        return "";
-      case "fileInputs":
+        return '';
+      case 'fileInputs':
         if (
           onlyOnSave &&
           (!fileInputs || Object.values(fileInputs).flat().length <= 0)
         ) {
-          return `Document is required`;
+          return 'Document is required';
         }
-        return "";
+        return '';
       default:
-        return "";
+        return '';
     }
   };
 
@@ -253,7 +256,7 @@ const useApplicationForm = (edit: boolean, product: Product) => {
     value: string,
     index?: number,
     fileInputs?: Record<string, File[]>,
-    onlyOnSave: boolean = false,
+    onlyOnSave = false,
   ) => {
     const errorMessage = validateInput(
       name,
@@ -263,9 +266,9 @@ const useApplicationForm = (edit: boolean, product: Product) => {
       fileInputs,
       onlyOnSave,
     );
-    const status = errorMessage ? "error" : "default";
+    const status = errorMessage ? 'error' : 'default';
 
-    if (name === "userApplicationId") {
+    if (name === 'userApplicationId') {
       ((edit && value) || !edit) &&
         setApplicationInfo((prev) => ({ ...prev, [name]: value }));
       setApplicantValidationStatus((prev) => ({
@@ -276,7 +279,7 @@ const useApplicationForm = (edit: boolean, product: Product) => {
         ...prev,
         [`${name}Message`]: errorMessage,
       }));
-    } else if (name === "userApplicantId" && index !== undefined) {
+    } else if (name === 'userApplicantId' && index !== undefined) {
       // Update the applicant list
       setApplicantList((prevList) => {
         const newList = [...prevList];
@@ -306,7 +309,7 @@ const useApplicationForm = (edit: boolean, product: Product) => {
           applicantMessage: newMessage,
         };
       });
-    } else if (name === "fileInputs" && index !== undefined) {
+    } else if (name === 'fileInputs' && index !== undefined) {
       // Update the validation status
       setApplicantValidationStatus((prevStatus) => {
         const newStatus = [...prevStatus.applicantStatus];
@@ -354,8 +357,8 @@ const useApplicationForm = (edit: boolean, product: Product) => {
   const validateForm = () => {
     const fieldsToValidate = [
       {
-        name: "userApplicationId",
-        label: "File Number",
+        name: 'userApplicationId',
+        label: 'File Number',
         value: applicationInfo?.userApplicationId,
       },
     ];
@@ -379,7 +382,7 @@ const useApplicationForm = (edit: boolean, product: Product) => {
 
     applicantList.forEach((applicant, index) => {
       const validateApplicant = validateAndSetField(
-        "userApplicantId",
+        'userApplicantId',
         `File ID ${index + 1}`,
         applicant.userApplicantId,
         index,
@@ -387,7 +390,7 @@ const useApplicationForm = (edit: boolean, product: Product) => {
         true,
       );
       const validateFileInputs = validateAndSetField(
-        "fileInputs",
+        'fileInputs',
         `File ID ${index + 1}`,
         null,
         index,
@@ -416,7 +419,7 @@ const useApplicationForm = (edit: boolean, product: Product) => {
     }
 
     // Join the file names with a comma separator
-    const fileNamesString = fileNames.join(", ");
+    const fileNamesString = fileNames.join(', ');
 
     // Return the result if needed
     return fileNamesString;
@@ -457,8 +460,8 @@ const useApplicationForm = (edit: boolean, product: Product) => {
       return;
     }
     setMessage(getConfirmationMessage(applicationInfo));
-    setOkText("YES, Submit");
-    setCancelText("No, Cancel");
+    setOkText('YES, Submit');
+    setCancelText('No, Cancel');
     setOkFunction(() => handleConfirmSubmit);
     setCancelFunction(handleCancel);
     openModal();
@@ -469,7 +472,7 @@ const useApplicationForm = (edit: boolean, product: Product) => {
     try {
       response = await sendRequest(
         edit ? APPLICATION_EDIT_API : APPLICATION_CREATE_API,
-        "POST",
+        'POST',
         {
           ...applicationInfo,
           id: applicationInfo.id,
@@ -485,16 +488,16 @@ const useApplicationForm = (edit: boolean, product: Product) => {
         for (const applicant of applicantList) {
           if (applicant?.userApplicantId) {
             const formData = new FormData();
-            formData.append("id", applicant.id);
-            formData.append("applicationId", response?.data?.id);
-            formData.append("product", product);
+            formData.append('id', applicant.id);
+            formData.append('applicationId', response?.data?.id);
+            formData.append('product', product);
             formData.append(
-              "userApplicantId",
-              applicant?.userApplicantId ?? "",
+              'userApplicantId',
+              applicant?.userApplicantId ?? '',
             );
             edit &&
               formData.append(
-                "deleteFileList",
+                'deleteFileList',
                 JSON.stringify(applicant?.deleteFileList ?? []),
               );
             Object.entries(applicant.fileInputs).forEach(([key, value]) => {
@@ -509,14 +512,14 @@ const useApplicationForm = (edit: boolean, product: Product) => {
               edit && applicant.inDb
                 ? APPLICANT_EDIT_API
                 : APPLICANT_CREATE_API,
-              "POST",
+              'POST',
               formData,
               true,
             );
 
             // Set snackbar for this applicant
             if (applicantResponse?.status === 200) {
-              console.log("Applicant Response: ", applicantResponse);
+              console.log('Applicant Response: ', applicantResponse);
               applicantIds.push(applicantResponse.data.id);
               addSnackApplicant(applicantResponse.data.id);
             } else {
@@ -527,20 +530,20 @@ const useApplicationForm = (edit: boolean, product: Product) => {
         setMessage(
           <span className="create-application-result create-application-success inline-block align-middle font-bold">
             {hasFile
-              ? "Thank you for the submission. We are starting document PII removal. Please wait for the process to complete before generating a report. See upper right for PII removal status."
+              ? 'Thank you for the submission. We are starting document PII removal. Please wait for the process to complete before generating a report. See upper right for PII removal status.'
               : edit
-              ? "File Updated"
-              : "File Added"}
+                ? 'File Updated'
+                : 'File Added'}
           </span>,
         );
         setOkFunction(() =>
           handleOkRedirect(
             `${getProductUrl(product)}${ADD_REPORT_PATH}${
-              response?.data?.id && "?applicationId=" + response?.data?.id
+              response?.data?.id && '?applicationId=' + response?.data?.id
             }`,
           ),
         );
-        setOkText("OK");
+        setOkText('OK');
       } else {
         throw new Error(response.message);
       }
@@ -548,7 +551,7 @@ const useApplicationForm = (edit: boolean, product: Product) => {
       !edit &&
         sendRequest(
           APPLICATION_ROLLBACK_API,
-          "POST",
+          'POST',
           {
             applicationId: response?.data?.id,
             product: product,
@@ -559,13 +562,13 @@ const useApplicationForm = (edit: boolean, product: Product) => {
       setMessage(
         <Box className="items-center create-application-result create-application-fail">
           <Box className="font-bold">
-            {edit ? "File modification failed. " : "File creation failed. "}
+            {edit ? 'File modification failed. ' : 'File creation failed. '}
           </Box>
-          <Box>{error instanceof Error ? error.message : "Internal Error"}</Box>
+          <Box>{error instanceof Error ? error.message : 'Internal Error'}</Box>
         </Box>,
       );
       setOkFunction(handleOk);
-      setOkText("OK");
+      setOkText('OK');
     } finally {
       setCancelFunction(undefined);
       openModal();

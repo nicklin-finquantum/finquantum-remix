@@ -9,7 +9,7 @@ import importPlugin from 'eslint-plugin-import';
 export default [
   // Base configuration
   js.configs.recommended,
-  
+
   // Global ignores
   {
     ignores: [
@@ -23,7 +23,7 @@ export default [
       'public/**',
     ],
   },
-  
+
   // Main configuration for all files
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
@@ -73,7 +73,7 @@ export default [
       '@typescript-eslint/no-non-null-assertion': 'warn',
       '@typescript-eslint/prefer-as-const': 'error',
       '@typescript-eslint/no-inferrable-types': 'error',
-      
+
       // React specific rules
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'off', // TypeScript handles prop validation
@@ -83,12 +83,39 @@ export default [
       'react/jsx-no-duplicate-props': 'error',
       'react/jsx-no-undef': 'error',
       'react/no-children-prop': 'error',
-      'react/no-unescaped-entities': 'warning',
-      
+      'react/no-unescaped-entities': 'warn',
+      'react/jsx-indent': ['error', 2],
+      'react/jsx-indent-props': ['error', 2],
+      'react/jsx-closing-bracket-location': ['error', 'line-aligned'],
+      'react/jsx-tag-spacing': [
+        'error',
+        {
+          closingSlash: 'never',
+          beforeSelfClosing: 'always',
+          afterOpening: 'never',
+          beforeClosing: 'never',
+        },
+      ],
+      'react/jsx-curly-spacing': ['error', { when: 'never', children: true }],
+      'react/jsx-curly-newline': ['error', { multiline: 'consistent', singleline: 'consistent' }],
+      'react/jsx-boolean-value': ['error', 'never'],
+      'react/jsx-wrap-multilines': [
+        'error',
+        {
+          declaration: 'parens-new-line',
+          assignment: 'parens-new-line',
+          return: 'parens-new-line',
+          arrow: 'parens-new-line',
+          condition: 'parens-new-line',
+          logical: 'parens-new-line',
+          prop: 'parens-new-line',
+        },
+      ],
+
       // React Hooks rules
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
-      
+
       // Import rules
       'import/order': [
         'error',
@@ -113,7 +140,7 @@ export default [
       'import/no-cycle': 'error',
       'import/first': 'error',
       'import/newline-after-import': 'error',
-      
+
       // General rules
       'no-console': 'warn',
       'no-debugger': 'error',
@@ -125,7 +152,7 @@ export default [
       'no-trailing-spaces': 'error',
       'no-multiple-empty-lines': ['error', { max: 1, maxEOF: 0 }],
       'no-mixed-spaces-and-tabs': 'error',
-      
+
       // Code style
       'indent': ['error', 2, { SwitchCase: 1 }],
       'quotes': ['error', 'single', { avoidEscape: true }],
@@ -147,7 +174,7 @@ export default [
       'generator-star-spacing': ['error', { before: false, after: true }],
       'rest-spread-spacing': ['error', 'never'],
       'template-curly-spacing': ['error', 'never'],
-      
+
       // JSX accessibility rules
       'jsx-a11y/alt-text': 'error',
       'jsx-a11y/anchor-has-content': 'error',
@@ -180,7 +207,7 @@ export default [
       },
     },
   },
-  
+
   // Configuration for API routes
   {
     files: ['pages/**/*.{js,jsx,ts,tsx}', 'app/**/*.{js,jsx,ts,tsx}', 'src/pages/**/*.{js,jsx,ts,tsx}', 'src/app/**/*.{js,jsx,ts,tsx}'],
@@ -188,7 +215,7 @@ export default [
       'import/no-default-export': 'off',
     },
   },
-  
+
   // Configuration for API routes
   {
     files: ['pages/api/**/*.{js,ts}', 'app/api/**/*.{js,ts}', 'src/pages/api/**/*.{js,ts}', 'src/app/api/**/*.{js,ts}'],
@@ -196,7 +223,7 @@ export default [
       'import/no-anonymous-default-export': 'off',
     },
   },
-  
+
   // Configuration for configuration files
   {
     files: ['*.config.{js,ts,mjs}', '**/*.config.{js,ts,mjs}'],
@@ -215,7 +242,7 @@ export default [
       'no-console': 'off',
     },
   },
-  
+
   // Configuration for test files
   {
     files: ['**/__tests__/**/*.{js,jsx,ts,tsx}', '**/*.{test,spec}.{js,jsx,ts,tsx}'],
@@ -238,7 +265,7 @@ export default [
       'import/no-extraneous-dependencies': 'off',
     },
   },
-  
+
   // TypeScript specific overrides
   {
     files: ['**/*.{ts,tsx}'],
